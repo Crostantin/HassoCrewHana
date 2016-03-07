@@ -1,0 +1,10 @@
+role HASSO_CREW.XS.HORSA_ODATA_WORK.data::ODataRole {
+	
+       	catalog schema "OSCHEMA" : SELECT,INSERT,UPDATE,DELETE,DROP;  
+    
+		catalog analytic privilege: "_SYS_BI_CP_ALL";
+          
+        application privilege: HASSO_CREW.XS.HORSA_ODATA_WORK::Admin;  
+        application privilege: HASSO_CREW.XS.HORSA_ODATA_WORK::Basic;
+
+}

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" schemaVersion="2.3" id="CV_GEO" applyPrivilegeType="ANALYTIC_PRIVILEGE" checkAnalyticPrivileges="true" defaultClient="$$client$$" defaultLanguage="$$language$$" hierarchiesSQLEnabled="false" translationRelevant="true" visibility="internal" calculationScenarioType="TREE_BASED" dataCategory="DIMENSION" enforceSqlExecution="false" executionSemantic="UNDEFINED" outputViewType="Projection">
+  <origin/>
+  <descriptions defaultDescription="CV_GEO"/>
+  <metadata changedAt="2016-01-21 14:56:43.531"/>
+  <localVariables>
+    <variable id="i_dist" parameter="true">
+      <descriptions defaultDescription="i_dist"/>
+      <variableProperties datatype="DECIMAL" defaultValue="500" length="15" mandatory="false" scale="2">
+        <valueDomain type="empty"/>
+        <selection multiLine="false" type="SingleValue"/>
+      </variableProperties>
+    </variable>
+  </localVariables>
+  <variableMappings/>
+  <dataSources>
+    <DataSource id="BASE" type="DATA_BASE_TABLE">
+      <viewAttributes allViewAttributes="true"/>
+      <columnObject schemaName="HT" columnObjectName="BASE"/>
+    </DataSource>
+    <DataSource id="ADDRESSES" type="DATA_BASE_TABLE">
+      <viewAttributes allViewAttributes="true"/>
+      <columnObject schemaName="HT" columnObjectName="ADDRESSES"/>
+    </DataSource>
+  </dataSources>
+  <calculationViews>
+    <calculationView xsi:type="Calculation:JoinView" id="Join_1" joinType="inner">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="BASE_CITY"/>
+        <viewAttribute id="CITY"/>
+        <viewAttribute id="COUNTRY"/>
+        <viewAttribute id="POINT"/>
+        <viewAttribute hidden="true" id="JOIN$BASE_POINT$POINT"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#BASE">
+        <mapping xsi:type="Calculation:AttributeMapping" target="BASE_CITY" source="BASE_CITY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="JOIN$BASE_POINT$POINT" source="BASE_POINT"/>
+      </input>
+      <input node="#ADDRESSES">
+        <mapping xsi:type="Calculation:AttributeMapping" target="CITY" source="CITY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="COUNTRY" source="COUNTRY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="POINT" source="POINT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="JOIN$BASE_POINT$POINT" source="POINT"/>
+      </input>
+      <joinAttribute name="JOIN$BASE_POINT$POINT">
+        <spatialJoinProperties predicate="WITHIN_DISTANCE" predicateEvaluatesTo="true">
+          <distance>
+            <localVariable>#i_dist</localVariable>
+          </distance>
+        </spatialJoinProperties>
+      </joinAttribute>
+    </calculationView>
+  </calculationViews>
+  <logicalModel id="Join_1">
+    <descriptions/>
+    <attributes>
+      <attribute id="BASE_CITY" order="1" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="BASE_CITY"/>
+        <keyMapping columnObjectName="Join_1" columnName="BASE_CITY"/>
+      </attribute>
+      <attribute id="CITY" order="2" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="CITY"/>
+        <keyMapping columnObjectName="Join_1" columnName="CITY"/>
+      </attribute>
+      <attribute id="COUNTRY" order="3" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="COUNTRY"/>
+        <keyMapping columnObjectName="Join_1" columnName="COUNTRY"/>
+      </attribute>
+      <attribute id="POINT" order="4" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="POINT"/>
+        <keyMapping columnObjectName="Join_1" columnName="POINT"/>
+      </attribute>
+    </attributes>
+    <calculatedAttributes/>
+    <privateDataFoundation>
+      <tableProxies/>
+      <joins/>
+      <layout>
+        <shapes/>
+      </layout>
+    </privateDataFoundation>
+    <baseMeasures/>
+    <calculatedMeasures/>
+    <restrictedMeasures/>
+    <localDimensions/>
+  </logicalModel>
+  <layout>
+    <shapes>
+      <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+        <upperLeftCorner x="22" y="87"/>
+        <rectangleSize/>
+      </shape>
+      <shape expanded="true" modelObjectName="Join_1" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="22" y="165"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+    </shapes>
+  </layout>
+</Calculation:scenario>

@@ -1,0 +1,8 @@
+import = [
+{
+ table = "HASSO_CREW.XS.HORSA_ODATA_WORK.data::OTable.people";
+ schema = "OSCHEMA";
+ file = "HASSO_CREW.XS.HORSA_ODATA_WORK.data:People.csv";
+ header = false;
+}];
+

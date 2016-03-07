@@ -1,0 +1,5 @@
+service {
+
+ "HASSO_CREW.XS.HORSA_ODATA_WORK.data::OTable.people" as "People";
+		
+}

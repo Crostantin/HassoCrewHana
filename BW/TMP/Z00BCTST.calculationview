@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AccessControl="http://www.sap.com/ndb/SQLCoreModelAccessControl.ecore" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" id="Z00BCTST" defaultClient="$$client$$" defaultLanguage="$$language$$" visibility="reportingEnabled" calculationScenarioType="TREE_BASED">
+  <origin entityName="Z00BCTST" entityType="CUBE" system="BWH"/>
+  <descriptions defaultDescription="Cubo didattico"/>
+  <defaultSchema schemaName="SAPBWH"/>
+  <localVariables>
+    <variable id="QUALOK" parameter="true">
+      <descriptions defaultDescription="QUALOK"/>
+      <variableProperties>
+        <derivationRule>
+          <resultColumn schemaName="SAPBWH" columnObjectName="RSMDATASTATE" columnName="QUALOK"/>
+          <columnFilter columnName="INFOCUBE">
+            <valueFilter xsi:type="AccessControl:SingleValueFilter" including="true" value="Z00BCTST"/>
+          </columnFilter>
+        </derivationRule>
+      </variableProperties>
+    </variable>
+  </localVariables>
+  <variableMappings/>
+  <dataSources>
+    <DataSource id="Z00BCTST_INTERNAL" type="ANALYTIC_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/HASSO_CREW.BW.TMP/analyticviews/Z00BCTST_INTERNAL</resourceUri>
+    </DataSource>
+  </dataSources>
+  <calculationViews>
+    <calculationView xsi:type="Calculation:ProjectionView" id="Projection_1">
+      <viewAttributes>
+        <viewAttribute id="0BASE_UOM"/>
+        <viewAttribute id="0BASE_UOM_description"/>
+        <viewAttribute id="0CALMONTH"/>
+        <viewAttribute id="0CALYEAR"/>
+        <viewAttribute id="0REQUID"/>
+        <viewAttribute id="Z00CGMAT"/>
+        <viewAttribute id="Z00CGMAT_description"/>
+        <viewAttribute id="Z00CMAT"/>
+        <viewAttribute id="Z00CMAT_description"/>
+        <viewAttribute id="Z00CMAT__Z00CGMAT"/>
+        <viewAttribute id="Z00CMAT__Z00CGMAT_description"/>
+        <viewAttribute id="Z00CSETI"/>
+        <viewAttribute id="Z00CSETI_description"/>
+        <viewAttribute id="Z00CSTATO"/>
+        <viewAttribute id="Z00CSTATO_description"/>
+        <viewAttribute id="Z00KQTA"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#Z00BCTST_INTERNAL">
+        <mapping xsi:type="Calculation:AttributeMapping" target="0BASE_UOM" source="0BASE_UOM"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="0BASE_UOM_description" source="0BASE_UOM.description"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="0CALMONTH" source="0CALMONTH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="0CALYEAR" source="0CALYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="0REQUID" source="0REQUID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="Z00CGMAT" source="Z00CGMAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="Z00CGMAT_description" source="Z00CGMAT.description"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="Z00CMAT" source="Z00CMAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="Z00CMAT_description" source="Z00CMAT.description"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="Z00CMAT__Z00CGMAT" source="Z00CMAT__Z00CGMAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="Z00CMAT__Z00CGMAT_description" source="Z00CMAT__Z00CGMAT.description"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="Z00CSETI" source="Z00CSETI"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="Z00CSETI_description" source="Z00CSETI.description"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="Z00CSTATO" source="Z00CSTATO"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="Z00CSTATO_description" source="Z00CSTATO.description"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="Z00KQTA" source="Z00KQTA"/>
+      </input>
+      <filter>&quot;0REQUID&quot; &lt;= '$$QUALOK$$'</filter>
+    </calculationView>
+  </calculationViews>
+  <logicalModel id="Projection_1">
+    <descriptions/>
+    <attributes>
+      <attribute id="0BASE_UOM" displayAttribute="false">
+        <descriptions defaultDescription="Unità di misura di base"/>
+        <searchProperties/>
+        <keyMapping schemaName="SAPBWH" columnObjectName="Projection_1" columnName="0BASE_UOM"/>
+        <descriptionMapping columnObjectName="Projection_1" columnName="0BASE_UOM_description"/>
+      </attribute>
+      <attribute id="0CALMONTH" displayAttribute="false">
+        <descriptions defaultDescription="Anno/mese calendario"/>
+        <searchProperties/>
+        <keyMapping schemaName="SAPBWH" columnObjectName="Projection_1" columnName="0CALMONTH"/>
+      </attribute>
+      <attribute id="0CALYEAR" displayAttribute="false">
+        <descriptions defaultDescription="Anno calendario"/>
+        <searchProperties/>
+        <keyMapping schemaName="SAPBWH" columnObjectName="Projection_1" columnName="0CALYEAR"/>
+      </attribute>
+      <attribute id="Z00CGMAT" displayAttribute="false">
+        <descriptions defaultDescription="Gruppo Materiali"/>
+        <searchProperties/>
+        <keyMapping schemaName="SAPBWH" columnObjectName="Projection_1" columnName="Z00CGMAT"/>
+        <descriptionMapping columnObjectName="Projection_1" columnName="Z00CGMAT_description"/>
+      </attribute>
+      <attribute id="Z00CMAT" displayAttribute="false">
+        <descriptions defaultDescription="Materiale"/>
+        <searchProperties/>
+        <keyMapping schemaName="SAPBWH" columnObjectName="Projection_1" columnName="Z00CMAT"/>
+        <descriptionMapping columnObjectName="Projection_1" columnName="Z00CMAT_description"/>
+      </attribute>
+      <attribute id="Z00CMAT__Z00CGMAT" displayAttribute="false">
+        <descriptions defaultDescription="Z00CMAT__Z00CGMAT"/>
+        <searchProperties/>
+        <keyMapping schemaName="SAPBWH" columnObjectName="Projection_1" columnName="Z00CMAT__Z00CGMAT"/>
+        <descriptionMapping columnObjectName="Projection_1" columnName="Z00CMAT__Z00CGMAT_description"/>
+      </attribute>
+      <attribute id="Z00CSETI" displayAttribute="false">
+        <descriptions defaultDescription="Settore Industriale"/>
+        <searchProperties/>
+        <keyMapping schemaName="SAPBWH" columnObjectName="Projection_1" columnName="Z00CSETI"/>
+        <descriptionMapping columnObjectName="Projection_1" columnName="Z00CSETI_description"/>
+      </attribute>
+      <attribute id="Z00CSTATO" displayAttribute="false">
+        <descriptions defaultDescription="Stato"/>
+        <searchProperties/>
+        <keyMapping schemaName="SAPBWH" columnObjectName="Projection_1" columnName="Z00CSTATO"/>
+        <descriptionMapping columnObjectName="Projection_1" columnName="Z00CSTATO_description"/>
+      </attribute>
+    </attributes>
+    <calculatedAttributes/>
+    <privateDataFoundation>
+      <tableProxies/>
+      <joins/>
+      <layout>
+        <shapes/>
+      </layout>
+    </privateDataFoundation>
+    <baseMeasures>
+      <measure id="Z00KQTA" aggregationType="sum" measureType="quantity">
+        <descriptions defaultDescription="Quantità">
+          <description description="Quantità" language="I"/>
+        </descriptions>
+        <unitCurrencyAttribute attributeName="0BASE_UOM"/>
+        <measureMapping columnObjectName="Projection_1" columnName="Z00KQTA"/>
+      </measure>
+    </baseMeasures>
+    <calculatedMeasures/>
+    <restrictedMeasures/>
+    <localDimensions/>
+  </logicalModel>
+  <layout>
+    <shapes>
+      <shape modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+        <upperLeftCorner x="40" y="85"/>
+      </shape>
+    </shapes>
+  </layout>
+</Calculation:scenario>

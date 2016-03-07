@@ -1,0 +1,5 @@
+service {
+/// se metto autenticazione FORM -> Lumira non funziona
+	"HT"."HASSO_CREW.XS.CDS_SAMPLE.data::Player.player" as "Players";
+
+}

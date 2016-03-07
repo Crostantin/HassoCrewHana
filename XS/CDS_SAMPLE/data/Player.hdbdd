@@ -1,0 +1,15 @@
+namespace HASSO_CREW.XS.CDS_SAMPLE.data;
+
+@Schema: 'HT'
+context Player {
+
+	@Catalog.tableType : #COLUMN
+	entity player {
+		key id : Integer;
+		Name : String(50);
+		Last_Name: String(50);
+	};
+    
+};
+
+

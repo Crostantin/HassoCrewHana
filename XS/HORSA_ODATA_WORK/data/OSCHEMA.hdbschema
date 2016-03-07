@@ -1,0 +1,14 @@
+// lo schema dopo l'attivazione è visibile solo nel catalog dell'utente _SYS_REPO
+// per garantire l'accesso anche ad altri utenti è necessario lanciare lo procedure:
+//
+// call _SYS_REPO.GRANT_SCHEMA_PRIVILEGE_ON_ACTIVATED_CONTENT('select','<SCHEMANAME>','<username>');
+//	==> si possono aggiungere anche altri privilegi:
+//		'select, create any, insert, delete, update, execute, alter, drop'
+//
+//
+// https://help.sap.com/saphelp_hanaplatform/helpdata/en/8a/825cbbe16a45a08987d9940d9f9f0f/content.htm
+//
+
+
+schema_name="OSCHEMA"; 
+

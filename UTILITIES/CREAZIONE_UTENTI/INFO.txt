@@ -1,0 +1,51 @@
+INFO SUGLI SCRIPT CREAZIONE UTENTI E ASSEGNAZIONE RUOLI
+
+1. script di creazione :
+
+input ==> tabella con i dati
+	--> dati imporatati da CSV
+	--> creo utenti o assegno ruoli
+output ==> tabella log errori
+
+2. dati sul db
+
+- table type per utenti, ruoli e log
+- 2 tabelle
+
+******************************************************************************************************************************
+
+TABLE AND TYPES:
+
+CREATE TYPE TT_USER_ROLE AS TABLE (
+	UTENTE NVARCHAR(250),
+	RUOLO NVARCHAR(50)
+);
+
+CREATE TYPE TT_USER_SETUP AS TABLE (
+	UTENTE NVARCHAR(250),
+	PASSWD NVARCHAR(50),
+	CLIENT NVARCHAR(3),
+	APPLICATIVO VARCHAR(1)
+);
+
+CREATE TYPE TT_ERROR_LOG AS TABLE (
+	ERRORE NVARCHAR(500),
+	DATA TIMESTAMP
+);
+
+
+CREATE COLUMN TABLE TABLE_USER_SETUP(
+	UTENTE NVARCHAR(250),
+	PASSWD NVARCHAR(50),
+	CLIENT NVARCHAR(3),
+	APPLICATIVO VARCHAR(1)
+)
+
+CREATE COLUMN TABLE TABLE_USER_ROLE (
+	UTENTE NVARCHAR(250),
+	RUOLO NVARCHAR(50)
+)
+
+
+DA INSERIRE IN FUTURO:
+- test su applicativo e client

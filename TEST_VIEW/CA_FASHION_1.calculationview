@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" schemaVersion="2.3" id="CA_FASHION_1" applyPrivilegeType="ANALYTIC_PRIVILEGE" checkAnalyticPrivileges="true" defaultClient="$$client$$" defaultLanguage="$$language$$" hierarchiesSQLEnabled="false" translationRelevant="true" visibility="reportingEnabled" calculationScenarioType="TREE_BASED" dataCategory="CUBE" enforceSqlExecution="false" executionSemantic="UNDEFINED" outputViewType="Aggregation">
+  <origin/>
+  <descriptions defaultDescription="CA_FASHION_1"/>
+  <metadata changedAt="2016-02-25 15:18:02.255"/>
+  <localVariables>
+    <variable id="i_tmp" parameter="true">
+      <descriptions defaultDescription="i_tmp"/>
+      <variableProperties datatype="INTEGER" defaultValue="1" mandatory="true">
+        <valueDomain type="empty"/>
+        <selection multiLine="false" type="SingleValue"/>
+      </variableProperties>
+    </variable>
+  </localVariables>
+  <variableMappings/>
+  <dataSources>
+    <DataSource id="FASHION_ARTICLE_LOOKUP" type="DATA_BASE_TABLE">
+      <viewAttributes allViewAttributes="true"/>
+      <columnObject schemaName="HT" columnObjectName="FASHION_ARTICLE_LOOKUP"/>
+    </DataSource>
+  </dataSources>
+  <calculationViews>
+    <calculationView xsi:type="Calculation:ProjectionView" id="Projection_1">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="ARTICLE_ID"/>
+        <viewAttribute id="ARTICLE_LABEL"/>
+        <viewAttribute id="CATEGORY"/>
+        <viewAttribute id="SALE_PRICE_2"/>
+        <viewAttribute id="FAMILY_NAME"/>
+        <viewAttribute id="FAMILY_CODE"/>
+      </viewAttributes>
+      <calculatedViewAttributes>
+        <calculatedViewAttribute datatype="DOUBLE" id="CALC" expressionLanguage="COLUMN_ENGINE">
+          <formula>$$i_tmp$$ * &quot;SALE_PRICE_2&quot;</formula>
+        </calculatedViewAttribute>
+      </calculatedViewAttributes>
+      <input node="#FASHION_ARTICLE_LOOKUP">
+        <mapping xsi:type="Calculation:AttributeMapping" target="ARTICLE_ID" source="ARTICLE_ID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ARTICLE_LABEL" source="ARTICLE_LABEL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="CATEGORY" source="CATEGORY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="SALE_PRICE_2" source="SALE_PRICE"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FAMILY_NAME" source="FAMILY_NAME"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="FAMILY_CODE" source="FAMILY_CODE"/>
+      </input>
+    </calculationView>
+  </calculationViews>
+  <logicalModel id="Projection_1">
+    <descriptions/>
+    <attributes>
+      <attribute id="CATEGORY" order="1" semanticType="empty" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions/>
+        <keyMapping columnObjectName="Projection_1" columnName="CATEGORY"/>
+      </attribute>
+      <attribute id="FAMILY_NAME" order="4" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="FAMILY_NAME"/>
+        <keyMapping columnObjectName="Projection_1" columnName="FAMILY_NAME"/>
+      </attribute>
+    </attributes>
+    <calculatedAttributes/>
+    <privateDataFoundation>
+      <tableProxies/>
+      <joins/>
+      <layout>
+        <shapes/>
+      </layout>
+    </privateDataFoundation>
+    <baseMeasures>
+      <measure id="SALE_PRICE" order="2" aggregationType="sum" measureType="simple">
+        <descriptions/>
+        <measureMapping columnObjectName="Projection_1" columnName="SALE_PRICE_2"/>
+      </measure>
+      <measure id="CALC" order="3" aggregationType="sum" measureType="simple">
+        <descriptions defaultDescription="CALC"/>
+        <measureMapping columnObjectName="Projection_1" columnName="CALC"/>
+      </measure>
+    </baseMeasures>
+    <calculatedMeasures/>
+    <restrictedMeasures/>
+    <localDimensions/>
+  </logicalModel>
+  <layout>
+    <shapes>
+      <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+        <upperLeftCorner x="22" y="87"/>
+        <rectangleSize height="0" width="0"/>
+      </shape>
+      <shape expanded="true" modelObjectName="Projection_1" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="22" y="165"/>
+        <rectangleSize height="-1" width="-1"/>
+      </shape>
+    </shapes>
+  </layout>
+</Calculation:scenario>

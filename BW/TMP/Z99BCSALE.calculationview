@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AccessControl="http://www.sap.com/ndb/SQLCoreModelAccessControl.ecore" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" id="Z99BCSALE" defaultClient="$$client$$" defaultLanguage="$$language$$" visibility="reportingEnabled" calculationScenarioType="TREE_BASED">
+  <origin entityName="Z99BCSALE" entityType="CUBE" system="BWH"/>
+  <descriptions defaultDescription="00 Vendite"/>
+  <defaultSchema schemaName="SAPBWH"/>
+  <localVariables>
+    <variable id="QUALOK" parameter="true">
+      <descriptions defaultDescription="QUALOK"/>
+      <variableProperties>
+        <derivationRule>
+          <resultColumn schemaName="SAPBWH" columnObjectName="RSMDATASTATE" columnName="QUALOK"/>
+          <columnFilter columnName="INFOCUBE">
+            <valueFilter xsi:type="AccessControl:SingleValueFilter" including="true" value="Z99BCSALE"/>
+          </columnFilter>
+        </derivationRule>
+      </variableProperties>
+    </variable>
+  </localVariables>
+  <variableMappings/>
+  <dataSources>
+    <DataSource id="Z99BCSALE_INTERNAL" type="ANALYTIC_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/HASSO_CREW.BW.TMP/analyticviews/Z99BCSALE_INTERNAL</resourceUri>
+    </DataSource>
+  </dataSources>
+  <calculationViews>
+    <calculationView xsi:type="Calculation:ProjectionView" id="Projection_1">
+      <viewAttributes>
+        <viewAttribute id="0CALMONTH"/>
+        <viewAttribute id="0CALYEAR"/>
+        <viewAttribute id="0CURRENCY"/>
+        <viewAttribute id="0CURRENCY_description"/>
+        <viewAttribute id="0REQUID"/>
+        <viewAttribute id="0UNIT"/>
+        <viewAttribute id="0UNIT_description"/>
+        <viewAttribute id="Z99CCUST"/>
+        <viewAttribute id="Z99CCUST_description"/>
+        <viewAttribute id="Z99CGMAT"/>
+        <viewAttribute id="Z99CGMAT_description"/>
+        <viewAttribute id="Z99CMAT"/>
+        <viewAttribute id="Z99CMAT_description"/>
+        <viewAttribute id="Z99KIMP"/>
+        <viewAttribute id="Z99KQTA"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#Z99BCSALE_INTERNAL">
+        <mapping xsi:type="Calculation:AttributeMapping" target="0CALMONTH" source="0CALMONTH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="0CALYEAR" source="0CALYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="0CURRENCY" source="0CURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="0CURRENCY_description" source="0CURRENCY.description"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="0REQUID" source="0REQUID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="0UNIT" source="0UNIT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="0UNIT_description" source="0UNIT.description"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="Z99CCUST" source="Z99CCUST"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="Z99CCUST_description" source="Z99CCUST.description"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="Z99CGMAT" source="Z99CGMAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="Z99CGMAT_description" source="Z99CGMAT.description"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="Z99CMAT" source="Z99CMAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="Z99CMAT_description" source="Z99CMAT.description"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="Z99KIMP" source="Z99KIMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="Z99KQTA" source="Z99KQTA"/>
+      </input>
+      <filter>&quot;0REQUID&quot; &lt;= '$$QUALOK$$'</filter>
+    </calculationView>
+  </calculationViews>
+  <logicalModel id="Projection_1">
+    <descriptions/>
+    <attributes>
+      <attribute id="0CALMONTH" displayAttribute="false">
+        <descriptions defaultDescription="Anno/mese calendario"/>
+        <searchProperties/>
+        <keyMapping schemaName="SAPBWH" columnObjectName="Projection_1" columnName="0CALMONTH"/>
+      </attribute>
+      <attribute id="0CALYEAR" displayAttribute="false">
+        <descriptions defaultDescription="Anno calendario"/>
+        <searchProperties/>
+        <keyMapping schemaName="SAPBWH" columnObjectName="Projection_1" columnName="0CALYEAR"/>
+      </attribute>
+      <attribute id="0CURRENCY" displayAttribute="false">
+        <descriptions defaultDescription="Chiave divisa"/>
+        <searchProperties/>
+        <keyMapping schemaName="SAPBWH" columnObjectName="Projection_1" columnName="0CURRENCY"/>
+        <descriptionMapping columnObjectName="Projection_1" columnName="0CURRENCY_description"/>
+      </attribute>
+      <attribute id="0UNIT" displayAttribute="false">
+        <descriptions defaultDescription="Unità di misura"/>
+        <searchProperties/>
+        <keyMapping schemaName="SAPBWH" columnObjectName="Projection_1" columnName="0UNIT"/>
+        <descriptionMapping columnObjectName="Projection_1" columnName="0UNIT_description"/>
+      </attribute>
+      <attribute id="Z99CCUST" displayAttribute="false">
+        <descriptions defaultDescription="Cliente"/>
+        <searchProperties/>
+        <keyMapping schemaName="SAPBWH" columnObjectName="Projection_1" columnName="Z99CCUST"/>
+        <descriptionMapping columnObjectName="Projection_1" columnName="Z99CCUST_description"/>
+      </attribute>
+      <attribute id="Z99CGMAT" displayAttribute="false">
+        <descriptions defaultDescription="Gruppo Materiali"/>
+        <searchProperties/>
+        <keyMapping schemaName="SAPBWH" columnObjectName="Projection_1" columnName="Z99CGMAT"/>
+        <descriptionMapping columnObjectName="Projection_1" columnName="Z99CGMAT_description"/>
+      </attribute>
+      <attribute id="Z99CMAT" displayAttribute="false">
+        <descriptions defaultDescription="Materiale"/>
+        <searchProperties/>
+        <keyMapping schemaName="SAPBWH" columnObjectName="Projection_1" columnName="Z99CMAT"/>
+        <descriptionMapping columnObjectName="Projection_1" columnName="Z99CMAT_description"/>
+      </attribute>
+    </attributes>
+    <calculatedAttributes/>
+    <privateDataFoundation>
+      <tableProxies/>
+      <joins/>
+      <layout>
+        <shapes/>
+      </layout>
+    </privateDataFoundation>
+    <baseMeasures>
+      <measure id="Z99KIMP" aggregationType="sum" measureType="amount">
+        <descriptions defaultDescription="Importo">
+          <description description="Importo" language="I"/>
+        </descriptions>
+        <unitCurrencyAttribute attributeName="0CURRENCY"/>
+        <measureMapping columnObjectName="Projection_1" columnName="Z99KIMP"/>
+      </measure>
+      <measure id="Z99KQTA" aggregationType="sum" measureType="quantity">
+        <descriptions defaultDescription="Quantità">
+          <description description="Quantità" language="I"/>
+        </descriptions>
+        <unitCurrencyAttribute attributeName="0UNIT"/>
+        <measureMapping columnObjectName="Projection_1" columnName="Z99KQTA"/>
+      </measure>
+    </baseMeasures>
+    <calculatedMeasures/>
+    <restrictedMeasures/>
+    <localDimensions/>
+  </logicalModel>
+  <layout>
+    <shapes>
+      <shape modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+        <upperLeftCorner x="40" y="85"/>
+      </shape>
+    </shapes>
+  </layout>
+</Calculation:scenario>

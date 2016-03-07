@@ -1,0 +1,6 @@
+service {
+	
+	"OSCHEMA"."HASSO_CREW.XS.HORSA_ODATA_WORK.data::OTableCreate.product" as "Product"
+		create using "HASSO_CREW.XS.HORSA_ODATA_WORK.SQL::createProductMethod";
+
+}

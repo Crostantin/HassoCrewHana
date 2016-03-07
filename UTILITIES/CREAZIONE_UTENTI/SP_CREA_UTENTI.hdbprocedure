@@ -1,0 +1,111 @@
+PROCEDURE "HT"."HASSO_CREW.UTILITIES.CREAZIONE_UTENTI::SP_CREA_UTENTI" ( 
+	IN inUserData TABLE(
+				UTENTE NVARCHAR(250),
+				PASSWD NVARCHAR(50),
+				CLIENT NVARCHAR(3),
+				APPLICATIVO VARCHAR(1)),
+	OUT ErrorLog TABLE(
+				ERRORE NVARCHAR(500),
+				DATA TIMESTAMP)
+	)
+	
+	LANGUAGE SQLSCRIPT
+	SQL SECURITY INVOKER  
+	DEFAULT SCHEMA "HT"
+	--READS SQL DATA
+
+ AS
+
+/*
+Questo script crea nuovi utenti nel sistema. 
+Prende in ingresso la tabella dove sono stati inseriti i dati e restituisce un file di log
+Lo script crea un loop sugli utenti in ingresso e se non sono esistenti procede alla creazione.
+Viene effettuato il test sull'esistenza e un eventuale errore viene scritto su log
+
+Documentazione: Dropbox\SAP HANA\Best Practices Interne\SCRIPT CREAZIONE UTENTI
+
+Matteo Crosta 
+
+29/10/2015 */
+
+/*********BEGIN PROCEDURE SCRIPT ************/
+
+BEGIN 
+
+	DECLARE i INT := 0;
+	DECLARE maxLoop INT;
+	DECLARE sqlStatement NVARCHAR(400);
+	DECLARE userFlag INT;
+
+	-- array per la scrittura dei log
+	DECLARE LOG_ERRORE NVARCHAR(500) ARRAY;
+	DECLARE LOG_DATA TIMESTAMP ARRAY;
+
+	-- variabili di scrittura
+    DECLARE newUser NVARCHAR(250);
+	DECLARE passNewUser NVARCHAR(50);
+	DECLARE client NVARCHAR(10);
+	DECLARE applicativo VARCHAR (1);			  
+			
+	-- conta utenti totali nella tabella di input
+	SELECT COUNT(UTENTE)
+	   	INTO maxLoop
+    FROM  :inUserData;
+    
+    -- test su tabella di input
+    IF (maxLoop > 0) THEN  
+    
+    	-- inizio ciclo su nuovi utenti
+  		FOR i IN  0..(maxLoop - 1) DO --offset start from 0
+			-- estrai dati
+			SELECT 
+				UTENTE,
+				PASSWD, --SUBSTR_REGEXPR('((?=.*[0-9])(?=.*[a-zA-Z]).{8,})' IN PASSWD),-- test password con espressioni regolari
+				CLIENT, 
+				UPPER(APPLICATIVO)
+			INTO newUser, passNewUser, client, applicativo
+				FROM :inUserData LIMIT 1 OFFSET :i;
+   	
+   			-- creazione flag per test esistenza utente
+   			SELECT count(USER_NAME) INTO userFlag FROM "SYS"."USERS" WHERE USER_NAME = UPPER(:newUser);
+   		
+   			-- scrivi su log se l'utente i-esimo è già esistente	
+   			IF 
+   				(userFlag <> 0) 
+   			THEN
+				LOG_ERRORE[i+1] := 'ERRORE 101: ' || newUser || ' già esistente';
+				LOG_DATA[i+1] := now();
+ 			END IF;
+ 
+ 			/** 
+ 			-- scrivi su log password errata
+ 			if (userflag = 0 AND passNewUser is null) THEN
+ 				LOG_ERRORE[i+1] := 'ERRORE 102: Password ' || newUser || ', non compatibile con il sistema';
+ 				LOG_DATA[i+1] := now();
+ 			END IF;
+ 				*/
+ 			
+ 			-- inserisci nuovo utente	
+ 			If (userFlag = 0 AND passNewUser IS NOT NULL ) THEN
+       			sqlStatement := 'CREATE USER ' || newUser || ' PASSWORD ' || passNewUser ||
+      				' SET PARAMETER CLIENT = ''' || client || '''' || 
+     				', APPLICATIVO = ''' || applicativo || '''';
+ 				EXEC (:sqlStatement);
+ 				
+ 				-- cancella record utente dalla tabella in ingresso
+ 				--sqlStatement := 'delete from "HAP_FASTDEV_SP"."TA_USERS_SETUP" where UTENTE = ''' || :newUser || '''';
+ 				--EXEC (:sqlStatement);
+ 			END IF;
+		
+		END FOR; 
+	
+	-- errore tabella di input vuota
+	ELSE
+		LOG_ERRORE[1] := 'ERRORE 100: Tabella di input Utenti vuota'; 
+		LOG_DATA[1] := now();
+	END IF;
+	
+	-- unisci gli array di log per produrre l'output
+	ErrorLog = UNNEST(:LOG_ERRORE,:LOG_DATA) AS ("ERRORE","DATA");
+
+END;

@@ -1,0 +1,16 @@
+namespace HASSO_CREW.XS.HORSA_ODATA_WORK.data;
+
+using HASSO_CREW.XS.HORSA_ODATA_WORK.data::cdsTest_1.T_NAME;
+
+@Schema: 'OSCHEMA'
+context OTable {
+
+    type SString: String(30);
+	
+	@Catalog.tableType: #COLUMN	
+ 	Entity people {
+ 		key ID: Integer; // element modifier 'key' defines that ID is primary key
+ 		Test : T_NAME;
+ 	};
+
+};

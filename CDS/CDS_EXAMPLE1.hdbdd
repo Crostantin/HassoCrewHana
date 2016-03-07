@@ -1,0 +1,11 @@
+namespace HASSO_CREW.CDS;
+
+@Schema: 'SAPH7D'
+context CDS_EXAMPLE1 {
+
+    VIEW MyView AS SELECT FROM VBAK
+{
+  KUNNR AS cliente 
+}  ;
+ 
+};

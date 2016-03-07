@@ -1,0 +1,7 @@
+description = "Local host destination";
+host = "localhost";
+port = 8000;
+useProxy = false;
+authType = none;
+useSSL = false;
+timeout = 0;

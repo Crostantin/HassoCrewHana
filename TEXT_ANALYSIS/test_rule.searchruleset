@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SearchRuleSet:ruleSet xmlns:SearchRuleSet="http://www.sap.com/ndb/SearchRuleSet.ecore">
+  <attributeView name="HASSO_CREW.TEXT_ANALYSIS::AT_MY_VIEW">
+    <keyColumn name="FILE"/>
+  </attributeView>
+  <rule name="Rule 1">
+    <column minFuzziness="0.8" name="FILE_CONTENT"/>
+    <column minFuzziness="0.8" name="FILE_CONTENT_1"/>
+  </rule>
+</SearchRuleSet:ruleSet>

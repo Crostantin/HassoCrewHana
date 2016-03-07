@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AccessControl="http://www.sap.com/ndb/SQLCoreModelAccessControl.ecore" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" schemaVersion="2.3" id="CV_TEST_1" applyPrivilegeType="NONE" checkAnalyticPrivileges="false" defaultClient="crossClient" defaultLanguage="$$language$$" hierarchiesSQLEnabled="false" translationRelevant="true" visibility="internal" calculationScenarioType="TREE_BASED" dataCategory="DEFAULT" enforceSqlExecution="true" executionSemantic="UNDEFINED" outputViewType="Projection" runWithInvokerPrivileges="false">
+  <origin/>
+  <descriptions defaultDescription="CV_TEST_1"/>
+  <metadata changedAt="2016-02-01 15:00:21.475"/>
+  <defaultSchema schemaName="SAP_ECC"/>
+  <localVariables/>
+  <variableMappings/>
+  <dataSources>
+    <DataSource id="DD07L" type="DATA_BASE_TABLE">
+      <viewAttributes allViewAttributes="true"/>
+      <columnObject schemaName="SAPH7D" columnObjectName="DD07L"/>
+    </DataSource>
+    <DataSource id="DD07T" type="DATA_BASE_TABLE">
+      <viewAttributes allViewAttributes="true"/>
+      <columnObject schemaName="SAPH7D" columnObjectName="DD07T"/>
+    </DataSource>
+  </dataSources>
+  <calculationViews>
+    <calculationView xsi:type="Calculation:JoinView" id="Join_1" cardinality="C1_1" joinType="textTable" languageColumn="DDLANGUAGE">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="DOMNAME"/>
+        <viewAttribute id="AS4LOCAL"/>
+        <viewAttribute id="VALPOS"/>
+        <viewAttribute id="AS4VERS"/>
+        <viewAttribute id="DOMVALUE_L"/>
+        <viewAttribute id="DDTEXT"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#DD07L">
+        <mapping xsi:type="Calculation:AttributeMapping" target="DOMNAME" source="DOMNAME"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AS4LOCAL" source="AS4LOCAL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="VALPOS" source="VALPOS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AS4VERS" source="AS4VERS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DOMVALUE_L" source="DOMVALUE_L"/>
+      </input>
+      <input node="#DD07T">
+        <mapping xsi:type="Calculation:AttributeMapping" target="DDTEXT" source="DDTEXT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DOMNAME" source="DOMNAME"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AS4LOCAL" source="AS4LOCAL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="VALPOS" source="VALPOS"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AS4VERS" source="AS4VERS"/>
+      </input>
+      <joinAttribute name="DOMNAME"/>
+      <joinAttribute name="AS4LOCAL"/>
+      <joinAttribute name="VALPOS"/>
+      <joinAttribute name="AS4VERS"/>
+    </calculationView>
+    <calculationView xsi:type="Calculation:ProjectionView" id="Projection_1">
+      <descriptions/>
+      <viewAttributes>
+        <viewAttribute id="DOMNAME">
+          <filter xsi:type="AccessControl:SingleValueFilter" including="true" value="BSTAT"/>
+        </viewAttribute>
+        <viewAttribute id="AS4LOCAL">
+          <filter xsi:type="AccessControl:SingleValueFilter" including="true" value="A"/>
+        </viewAttribute>
+        <viewAttribute id="DOMVALUE_L"/>
+        <viewAttribute id="DDTEXT"/>
+      </viewAttributes>
+      <calculatedViewAttributes>
+        <calculatedViewAttribute datatype="VARCHAR" id="DOMVALUE" length="1" scale="0" expressionLanguage="COLUMN_ENGINE">
+          <formula>leftstr(&quot;DOMVALUE_L&quot;,1)</formula>
+        </calculatedViewAttribute>
+      </calculatedViewAttributes>
+      <input node="#Join_1">
+        <mapping xsi:type="Calculation:AttributeMapping" target="DOMNAME" source="DOMNAME"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="AS4LOCAL" source="AS4LOCAL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DOMVALUE_L" source="DOMVALUE_L"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="DDTEXT" source="DDTEXT"/>
+      </input>
+    </calculationView>
+  </calculationViews>
+  <logicalModel id="Projection_1">
+    <descriptions/>
+    <attributes>
+      <attribute id="AccountingDocumentCategory" order="1" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Accounting Document Status"/>
+        <searchProperties/>
+        <keyMapping columnObjectName="Projection_1" columnName="DOMVALUE"/>
+      </attribute>
+      <attribute id="AccountingDocumentCategoryName" order="2" attributeHierarchyActive="false" displayAttribute="false">
+        <descriptions defaultDescription="Short text for fixed values of accounting document status"/>
+        <searchProperties/>
+        <keyMapping columnObjectName="Projection_1" columnName="DDTEXT"/>
+      </attribute>
+    </attributes>
+    <calculatedAttributes/>
+    <privateDataFoundation>
+      <tableProxies/>
+      <joins/>
+      <layout>
+        <shapes/>
+      </layout>
+    </privateDataFoundation>
+    <baseMeasures/>
+    <calculatedMeasures/>
+    <restrictedMeasures/>
+    <localDimensions/>
+  </logicalModel>
+  <layout>
+    <shapes>
+      <shape modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+        <upperLeftCorner x="22" y="87"/>
+        <rectangleSize/>
+      </shape>
+      <shape modelObjectName="Join_1" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="22" y="245"/>
+        <rectangleSize/>
+      </shape>
+      <shape modelObjectName="Projection_1" modelObjectNameSpace="CalculationView">
+        <upperLeftCorner x="22" y="166"/>
+        <rectangleSize/>
+      </shape>
+    </shapes>
+  </layout>
+</Calculation:scenario>

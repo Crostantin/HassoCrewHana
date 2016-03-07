@@ -1,0 +1,15 @@
+namespace HASSO_CREW.XS.HORSA_ODATA_WORK.data;
+
+@Schema: 'OSCHEMA'
+context cdsTest_1 {
+
+    type T_NAME {
+    	firstname : String (20);
+    	lastname: String(20);
+    };
+    
+    entity Person {
+    	key ID : Integer;
+    	Name : T_NAME;
+    };
+};

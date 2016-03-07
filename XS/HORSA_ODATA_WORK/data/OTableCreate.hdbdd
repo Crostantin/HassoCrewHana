@@ -1,0 +1,31 @@
+namespace HASSO_CREW.XS.HORSA_ODATA_WORK.data;
+
+@Schema: 'OSCHEMA'
+context OTableCreate {
+
+    @Catalog.tableType: #COLUMN	
+ 	Entity product {
+ 		key ID: Integer; // element modifier 'key' defines that ID is primary key
+ 		NAME: String(10);
+ 		NUMBER : Integer;
+ 	};
+
+	// types per la procedure
+	context Procedures {	
+		
+		// table type in ingresso
+		type in_product {
+    		ID: Integer;
+    		NAME: String(10);
+ 			NUMBER : Integer;  
+		};
+		
+		// type per gli errori
+		type out_error {
+			HTTP_STATUS_CODE : Integer;
+			ERROR_MSG : String(100);
+			ERROR_DETAIL : String(100);
+		};
+	};
+
+};

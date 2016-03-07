@@ -1,0 +1,96 @@
+PROCEDURE "HT"."HASSO_CREW.UTILITIES.CREAZIONE_UTENTI::SP_ASSEGNA_RUOLI" ( 
+	IN inRoleData TABLE(
+				UTENTE NVARCHAR(250),
+				RUOLO NVARCHAR(50)),
+	OUT ErrorLog TABLE(
+				ERRORE NVARCHAR(500),
+				DATA TIMESTAMP)
+	) 
+	 
+	
+	LANGUAGE SQLSCRIPT
+	SQL SECURITY INVOKER 
+	DEFAULT SCHEMA "HT" 
+	--READS SQL DATA 
+AS
+/*
+Questo script assegna ruoli ad utenti già esistenti nel sistema 
+Prende in ingresso la tabella dove sono stati inseriti i dati e restituisce un file di log
+Lo script crea un loop sugli utenti in ingresso e se ruolo ed utente sono presenti sul sistema procede all'assegnazione.
+Viene effettuato il test sull'esistenza di utente e ruolo e un eventuale errore viene scritto su log
+
+Matteo Crosta 
+
+29/10/2015 */
+
+BEGIN
+
+	-- variabili di controllo
+	DECLARE i INT;
+	DECLARE maxLoop INT;
+	DECLARE sqlStatement VARCHAR(400);
+	DECLARE roleFlag INT;
+	DECLARE userFlag INT;
+
+	-- array per la scrittura dei log
+	DECLARE LOG_ERRORE NVARCHAR(500) ARRAY;
+	DECLARE LOG_DATA TIMESTAMP ARRAY;
+		
+	-- variabili di scrittura
+	DECLARE userTarget NVARCHAR(250);
+	DECLARE roleForUser NVARCHAR(50);
+	
+	-- conta utenti totali nella tabella di input
+	SELECT count (UTENTE) 
+		INTO maxLoop
+	FROM :inRoleData;
+
+	-- test su tabella di input
+    IF (maxLoop > 0) THEN
+		FOR i IN 0..(maxLoop-1) DO 
+	
+			-- estrai dati
+			SELECT UTENTE, UPPER(RUOLO)  INTO userTarget, roleForUser FROM :inRoleData LIMIT 1 OFFSET :i;
+			
+   			-- creazione flag per test esistenza ruolo
+			SELECT COUNT(ROLE_NAME) INTO roleFlag FROM "SYS"."ROLES" WHERE ROLE_NAME = :roleForUser;
+   		
+   			-- creazione flag per test esistenza utente		
+			SELECT COUNT(USER_NAME) INTO userFlag FROM "SYS"."USERS" WHERE USER_NAME = UPPER(:userTarget);	
+		
+			-- scrivi su log se ruolo non esistente
+			IF (roleFlag = 0) THEN 
+				LOG_ERRORE[i+1] :='ERRORE 104: ' || roleForUser || ' assegnato a ' || userTarget || ' non esistente';
+				LOG_DATA[i+1] := now();				
+ 			END IF;
+
+			-- scrivi su log se utente non esistente	
+ 			IF 
+  	 			(userFlag = 0) 
+  	 		THEN		  		
+				LOG_ERRORE[i+1] := 'ERRORE 105: ' || userTarget || ' non esistente. Non è stato possibile assegnare il ruolo' ;
+				LOG_DATA[i+1] := now();	 				
+ 			END IF;
+ 		
+ 			-- assegna ruolo
+			IF 
+				(:roleFlag > 0 AND :userFlag > 0)
+			THEN 
+			   	sqlStatement := 'GRANT ' || :roleForUser || ' TO ' || :userTarget; 
+				EXECUTE IMMEDIATE (:sqlStatement);
+				 -- cancella record utente dalla tabella in ingresso
+ 				-- sqlStatement := 'delete from "HAP_FASTDEV_SP"."TA_USER_ROLE" where UTENTE = ''' || :userTarget || '''';
+ 				-- EXEC (:sqlStatement);
+			END IF;
+			
+		END FOR;
+		
+	-- errore tabella di input vuota
+	ELSE
+		LOG_ERRORE[1] :=  'ERRORE 103: Tabella di input Ruoli vuota';
+		LOG_DATA[1] := now();
+	END IF;
+	
+	-- unisci gli array di log per produrre l'output
+	ErrorLog = UNNEST(:LOG_ERRORE,:LOG_DATA) AS ("ERRORE","DATA");
+END;

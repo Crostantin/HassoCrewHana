@@ -1,0 +1,5 @@
+service {
+
+	"HASSO_CREW.TEST_VIEW::CA_FASHION_2" as "TmpCAView"  keys generate local "ID" parameters via entity "IN";
+
+}

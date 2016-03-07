@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<flowgraph:ContainerNode xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:flowgraph="http://www.sap.com/ndb/flowgraph/1.0" xmi:id="_BRsoENATEeWIs8N4ugerag" name="TEST_ECC" generateProcedure="false" generateTask="true" targetSchema="HT">
+  <annotations xmi:id="_BRsoEdATEeWIs8N4ugerag" key="sap.afm.layout">
+    <annotations xmi:id="_BRsoEtATEeWIs8N4ugerag" key="x" value="10"/>
+    <annotations xmi:id="_BRsoE9ATEeWIs8N4ugerag" key="y" value="10"/>
+  </annotations>
+  <annotations xmi:id="_BRsoFNATEeWIs8N4ugerag" key="sap.afm.palette" value="">
+    <annotations xmi:id="_BRsoFdATEeWIs8N4ugerag" key="additions" value=""/>
+  </annotations>
+  <annotations xmi:id="_B-VroNATEeWIs8N4ugerag" key="sap.im.realtime" value="true"/>
+  <annotations xmi:id="_I8IkMNATEeWIs8N4ugerag" key="sap.afm.nodeType" value="ContainerNode"/>
+  <annotations xmi:id="_I8TjUNATEeWIs8N4ugerag" key="sap.afm.nodeInputs"/>
+  <annotations xmi:id="_I8ZC4NATEeWIs8N4ugerag" key="sap.afm.nodeOutputs"/>
+  <tableMappings xmi:id="_ED7iVdAXEeWIs8N4ugerag" source="_DtmF-NAXEeWIs8N4ugerag" target="_E69NyNATEeWIs8N4ugerag">
+    <attributeMappings xmi:id="_ED7iVtAXEeWIs8N4ugerag" source="_DtmF-dAXEeWIs8N4ugerag" target="_ED7iUNAXEeWIs8N4ugerag"/>
+    <attributeMappings xmi:id="_ED7iV9AXEeWIs8N4ugerag" source="_DtmF-tAXEeWIs8N4ugerag" target="_ED7iUdAXEeWIs8N4ugerag"/>
+    <attributeMappings xmi:id="_ED7iWNAXEeWIs8N4ugerag" source="_DtmF-9AXEeWIs8N4ugerag" target="_ED7iUtAXEeWIs8N4ugerag"/>
+    <attributeMappings xmi:id="_ED7iWdAXEeWIs8N4ugerag" source="_DtmF_NAXEeWIs8N4ugerag" target="_ED7iU9AXEeWIs8N4ugerag"/>
+    <attributeMappings xmi:id="_ED7iWtAXEeWIs8N4ugerag" source="_DtmF_dAXEeWIs8N4ugerag" target="_ED7iVNAXEeWIs8N4ugerag"/>
+  </tableMappings>
+  <nodes xsi:type="flowgraph:DataNode" xmi:id="_E69NwNATEeWIs8N4ugerag" name="TEMPLATESINK" type="TEMPLATE_TABLE" authoringSchemaName="HT" catalogObjectName="ECC_TEST" dataLayout="COLUMN" truncateTable="false">
+    <annotations xmi:id="_E69NwdATEeWIs8N4ugerag" key="sap.afm.description" value="Create a catalog object and write data to it"/>
+    <annotations xmi:id="_E69NwtATEeWIs8N4ugerag" key="sap.afm.displayName" value="Data Sink (Template Table)"/>
+    <annotations xmi:id="_E69Nw9ATEeWIs8N4ugerag" key="sap.afm.layout">
+      <annotations xmi:id="_E69NxNATEeWIs8N4ugerag" key="x" value="438"/>
+      <annotations xmi:id="_E69NxdATEeWIs8N4ugerag" key="y" value="108"/>
+      <annotations xmi:id="_E69NxtATEeWIs8N4ugerag" key="width" value="100"/>
+      <annotations xmi:id="_E69Nx9ATEeWIs8N4ugerag" key="height" value="64"/>
+    </annotations>
+    <annotations xmi:id="_Ha1JgNATEeWIs8N4ugerag" key="sap.im.writerType" value="insert"/>
+    <annotations xmi:id="_I9At8NATEeWIs8N4ugerag" key="sap.afm.nodeType" value="DataNode"/>
+    <annotations xmi:id="_I9LGANATEeWIs8N4ugerag" key="sap.afm.nodeInputs">
+      <annotations xmi:id="_I9P-gNATEeWIs8N4ugerag" key="DATA_2" value="DATA"/>
+    </annotations>
+    <annotations xmi:id="_I9fPENATEeWIs8N4ugerag" key="sap.afm.nodeOutputs"/>
+    <inputs xmi:id="_E69NyNATEeWIs8N4ugerag" name="DATA_2" kind="TABLE">
+      <attributes xmi:id="_ED7iUNAXEeWIs8N4ugerag" name="suid" type="INTEGER" nullable="false" length="0" scale="0"/>
+      <attributes xmi:id="_ED7iUdAXEeWIs8N4ugerag" name="uid" type="INTEGER" nullable="false" length="0" scale="0"/>
+      <attributes xmi:id="_ED7iUtAXEeWIs8N4ugerag" name="gid" type="INTEGER" nullable="false" length="0" scale="0"/>
+      <attributes xmi:id="_ED7iU9AXEeWIs8N4ugerag" name="name" type="VARCHAR" nullable="false" length="30" scale="0"/>
+      <attributes xmi:id="_ED7iVNAXEeWIs8N4ugerag" name="environ" type="VARCHAR" nullable="true" length="255" scale="0"/>
+    </inputs>
+  </nodes>
+  <nodes xsi:type="flowgraph:DataNode" xmi:id="_DtmF8NAXEeWIs8N4ugerag" name="ASE_SYSUSERS" type="VIRTUAL_TABLE" authoringSchemaName="HT" catalogObjectName="ase_sysusers" dataLayout="COLUMN" truncateTable="false">
+    <annotations xmi:id="_DtmF8dAXEeWIs8N4ugerag" key="sap.afm.description" value="Read data from a catalog or repository object"/>
+    <annotations xmi:id="_DtmF8tAXEeWIs8N4ugerag" key="sap.afm.displayName" value="Data Source"/>
+    <annotations xmi:id="_DtmF89AXEeWIs8N4ugerag" key="sap.afm.layout">
+      <annotations xmi:id="_DtmF9NAXEeWIs8N4ugerag" key="x" value="116"/>
+      <annotations xmi:id="_DtmF9dAXEeWIs8N4ugerag" key="y" value="134"/>
+      <annotations xmi:id="_DtmF9tAXEeWIs8N4ugerag" key="width" value="100"/>
+      <annotations xmi:id="_DtmF99AXEeWIs8N4ugerag" key="height" value="64"/>
+    </annotations>
+    <annotations xmi:id="_IjbzgNAXEeWIs8N4ugerag" key="sap.im.realtime" value="true"/>
+    <annotations xmi:id="_JkZhQNAXEeWIs8N4ugerag" key="sap.afm.nodeType" value="DataNode"/>
+    <annotations xmi:id="_JkZhQdAXEeWIs8N4ugerag" key="sap.afm.nodeInputs"/>
+    <annotations xmi:id="_JkZhQtAXEeWIs8N4ugerag" key="sap.afm.nodeOutputs">
+      <annotations xmi:id="_JkZhQ9AXEeWIs8N4ugerag" key="DATA" value="DATA_2"/>
+    </annotations>
+    <outputs xmi:id="_DtmF-NAXEeWIs8N4ugerag" name="DATA" kind="TABLE">
+      <attributes xmi:id="_DtmF-dAXEeWIs8N4ugerag" name="suid" type="INTEGER" nullable="false" length="0" scale="0"/>
+      <attributes xmi:id="_DtmF-tAXEeWIs8N4ugerag" name="uid" type="INTEGER" nullable="false" length="0" scale="0"/>
+      <attributes xmi:id="_DtmF-9AXEeWIs8N4ugerag" name="gid" type="INTEGER" nullable="false" length="0" scale="0"/>
+      <attributes xmi:id="_DtmF_NAXEeWIs8N4ugerag" name="name" type="VARCHAR" nullable="false" length="30" scale="0"/>
+      <attributes xmi:id="_DtmF_dAXEeWIs8N4ugerag" name="environ" type="VARCHAR" nullable="true" length="255" scale="0"/>
+    </outputs>
+  </nodes>
+</flowgraph:ContainerNode>

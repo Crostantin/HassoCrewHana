@@ -1,0 +1,37 @@
+PROCEDURE "GPSTRACKER"."HASSO_CREW.XS.Tracker.service::insertRowTracker" ( 
+	IN row "GPSTRACKER"."HASSO_CREW.XS.Tracker.init::GPSTracker.Procedures.gps_in",
+	OUT error "GPSTRACKER"."HASSO_CREW.XS.Tracker.init::GPSTracker.Procedures.out_error") 
+	
+	LANGUAGE SQLSCRIPT
+	SQL SECURITY INVOKER 
+	DEFAULT SCHEMA "GPSTRACKER"
+	--READS SQL DATA 
+	AS  
+BEGIN
+/***************************** 
+	Write your procedure logic 
+ *****************************/
+ 
+	declare lv_LAT string;
+	declare lv_LONG string;
+
+	SELECT
+		LAT,
+		LONG
+	INTO
+		lv_LAT,
+		lv_LONG
+	FROM :row;
+
+
+  if :lv_LAT = ''  then
+
+    error = select 400 as http_status_code, 'invalid LAT' ERROR_MSG, 'Must be filed' ERROR_DETAIL from dummy;
+  else
+    
+    insert into "GPSTRACKER"."HASSO_CREW.XS.Tracker.init::GPSTracker.GPSTracker"
+	   values (current_timestamp, current_date,
+		   lv_LAT,lv_LONG);
+
+  end if;
+END;

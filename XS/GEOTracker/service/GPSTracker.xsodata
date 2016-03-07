@@ -1,0 +1,6 @@
+service  {  
+     
+     "GPSTRACKER"."HASSO_CREW.XS.Tracker.init::GPSTracker.GPSTracker" as "GPSTracker"
+     	create using "HASSO_CREW.XS.Tracker.service::insertRowTracker";
+
+} 

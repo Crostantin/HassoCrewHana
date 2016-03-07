@@ -1,0 +1,8 @@
+schema= "OSCHEMA";
+start_with= 3;
+maxvalue= 1000000000;
+nomaxvalue=false;
+minvalue= 3;
+nominvalue=true;
+cycles= false;
+depends_on_table= "HASSO_CREW.XS.HORSA_ODATA_WORK.data::OTableCreate.product";

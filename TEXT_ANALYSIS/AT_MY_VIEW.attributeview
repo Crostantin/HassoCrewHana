@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Dimension:dimension xmlns:Dimension="http://www.sap.com/ndb/BiModelDimension.ecore" schemaVersion="1.2" id="AT_MY_VIEW" applyPrivilegeType="ANALYTIC_PRIVILEGE" checkAnalyticPrivileges="true" defaultClient="$$client$$" defaultLanguage="$$language$$" hierarchiesSQLEnabled="false" translationRelevant="true" visibility="internal" dimensionType="Standard">
+  <origin/>
+  <descriptions defaultDescription="AT_MY_VIEW"/>
+  <attributes>
+    <attribute id="FILE" key="true" order="1" attributeHierarchyActive="false" displayAttribute="false">
+      <descriptions defaultDescription="FILE"/>
+      <keyMapping schemaName="HT" columnObjectName="FOUND" columnName="FILE"/>
+    </attribute>
+    <attribute id="FILE_CONTENT" order="2" attributeHierarchyActive="false" displayAttribute="false">
+      <descriptions defaultDescription="FILE_CONTENT"/>
+      <keyMapping schemaName="HT" columnObjectName="MY_TABLE" columnName="FILE_CONTENT"/>
+    </attribute>
+    <attribute id="FILE_CONTENT_1" order="3" attributeHierarchyActive="false" displayAttribute="false">
+      <descriptions defaultDescription="FILE_CONTENT_1"/>
+      <keyMapping schemaName="HT" columnObjectName="MY_TABLE_2" columnName="FILE_CONTENT"/>
+    </attribute>
+  </attributes>
+  <calculatedAttributes/>
+  <privateDataFoundation>
+    <tableProxies>
+      <tableProxy>
+        <table schemaName="HT" columnObjectName="FOUND"/>
+      </tableProxy>
+      <tableProxy>
+        <table schemaName="HT" columnObjectName="MY_TABLE"/>
+      </tableProxy>
+      <tableProxy>
+        <table schemaName="HT" columnObjectName="MY_TABLE_2"/>
+      </tableProxy>
+    </tableProxies>
+    <joins>
+      <join>
+        <leftTable schemaName="HT" columnObjectName="FOUND"/>
+        <rightTable schemaName="HT" columnObjectName="MY_TABLE"/>
+        <leftColumns>
+          <columnName>FILE</columnName>
+        </leftColumns>
+        <rightColumns>
+          <columnName>FILE_NAME</columnName>
+        </rightColumns>
+        <properties cardinality="C1_1" joinOperator="Equal" joinType="leftOuter"/>
+      </join>
+      <join>
+        <leftTable schemaName="HT" columnObjectName="FOUND"/>
+        <rightTable schemaName="HT" columnObjectName="MY_TABLE_2"/>
+        <leftColumns>
+          <columnName>FILE</columnName>
+        </leftColumns>
+        <rightColumns>
+          <columnName>FILE_NAME</columnName>
+        </rightColumns>
+        <properties cardinality="C1_1" joinOperator="Equal" joinType="leftOuter"/>
+      </join>
+    </joins>
+    <layout>
+      <shapes>
+        <shape modelObjectName="FOUND" modelObjectNameSpace="HT" modelObjectType="catalog">
+          <upperLeftCorner x="270" y="16"/>
+        </shape>
+        <shape modelObjectName="MY_TABLE" modelObjectNameSpace="HT" modelObjectType="catalog">
+          <upperLeftCorner x="524" y="16"/>
+        </shape>
+        <shape modelObjectName="MY_TABLE_2" modelObjectNameSpace="HT" modelObjectType="catalog">
+          <upperLeftCorner x="16" y="16"/>
+        </shape>
+        <shape modelObjectName="DataFoundation" modelObjectNameSpace="DataFoundation" modelObjectType="repository">
+          <upperLeftCorner x="40" y="85"/>
+          <rectangleSize height="0" width="0"/>
+        </shape>
+      </shapes>
+    </layout>
+  </privateDataFoundation>
+  <hierarchies/>
+</Dimension:dimension>

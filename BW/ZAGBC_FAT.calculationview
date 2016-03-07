@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AccessControl="http://www.sap.com/ndb/SQLCoreModelAccessControl.ecore" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" id="ZAGBC_FAT" defaultClient="$$client$$" defaultLanguage="$$language$$" visibility="reportingEnabled" calculationScenarioType="TREE_BASED">
+  <origin entityName="ZAGBC_FAT" entityType="CUBE" system="BWH"/>
+  <descriptions defaultDescription="CUBO DEL FATTURATO"/>
+  <defaultSchema schemaName="SAPBWH"/>
+  <localVariables>
+    <variable id="QUALOK" parameter="true">
+      <descriptions defaultDescription="QUALOK"/>
+      <variableProperties>
+        <derivationRule>
+          <resultColumn schemaName="SAPBWH" columnObjectName="RSMDATASTATE" columnName="QUALOK"/>
+          <columnFilter columnName="INFOCUBE">
+            <valueFilter xsi:type="AccessControl:SingleValueFilter" including="true" value="ZAGBC_FAT"/>
+          </columnFilter>
+        </derivationRule>
+      </variableProperties>
+    </variable>
+  </localVariables>
+  <variableMappings/>
+  <dataSources>
+    <DataSource id="ZAGBC_FAT_INTERNAL" type="ANALYTIC_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/HASSO_CREW.BW/analyticviews/ZAGBC_FAT_INTERNAL</resourceUri>
+    </DataSource>
+  </dataSources>
+  <calculationViews>
+    <calculationView xsi:type="Calculation:ProjectionView" id="Projection_1">
+      <viewAttributes>
+        <viewAttribute id="0CALMONTH"/>
+        <viewAttribute id="0CALMONTH2"/>
+        <viewAttribute id="0CALYEAR"/>
+        <viewAttribute id="0CURRENCY"/>
+        <viewAttribute id="0CURRENCY_description"/>
+        <viewAttribute id="0REQUID"/>
+        <viewAttribute id="0UNIT"/>
+        <viewAttribute id="0UNIT_description"/>
+        <viewAttribute id="ZAGCCUST"/>
+        <viewAttribute id="ZAGCCUST_description"/>
+        <viewAttribute id="ZAGCCUST__ZAGCSETI"/>
+        <viewAttribute id="ZAGCCUST__ZAGCSETI_description"/>
+        <viewAttribute id="ZAGCCUST__ZAGCSTATO"/>
+        <viewAttribute id="ZAGCCUST__ZAGCSTATO_description"/>
+        <viewAttribute id="ZAGCGMAT"/>
+        <viewAttribute id="ZAGCGMAT_description"/>
+        <viewAttribute id="ZAGCMAT"/>
+        <viewAttribute id="ZAGCMAT_description"/>
+        <viewAttribute id="ZAGCMAT__ZAGCGMAT"/>
+        <viewAttribute id="ZAGCMAT__ZAGCGMAT_description"/>
+        <viewAttribute id="ZAGCNFAT"/>
+        <viewAttribute id="ZAGCNFAT_description"/>
+        <viewAttribute id="ZAGKIMP"/>
+        <viewAttribute id="ZAGKQTA"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#ZAGBC_FAT_INTERNAL">
+        <mapping xsi:type="Calculation:AttributeMapping" target="0CALMONTH" source="0CALMONTH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="0CALMONTH2" source="0CALMONTH2"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="0CALYEAR" source="0CALYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="0CURRENCY" source="0CURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="0CURRENCY_description" source="0CURRENCY.description"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="0REQUID" source="0REQUID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="0UNIT" source="0UNIT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="0UNIT_description" source="0UNIT.description"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZAGCCUST" source="ZAGCCUST"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZAGCCUST_description" source="ZAGCCUST.description"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZAGCCUST__ZAGCSETI" source="ZAGCCUST__ZAGCSETI"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZAGCCUST__ZAGCSETI_description" source="ZAGCCUST__ZAGCSETI.description"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZAGCCUST__ZAGCSTATO" source="ZAGCCUST__ZAGCSTATO"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZAGCCUST__ZAGCSTATO_description" source="ZAGCCUST__ZAGCSTATO.description"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZAGCGMAT" source="ZAGCGMAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZAGCGMAT_description" source="ZAGCGMAT.description"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZAGCMAT" source="ZAGCMAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZAGCMAT_description" source="ZAGCMAT.description"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZAGCMAT__ZAGCGMAT" source="ZAGCMAT__ZAGCGMAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZAGCMAT__ZAGCGMAT_description" source="ZAGCMAT__ZAGCGMAT.description"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZAGCNFAT" source="ZAGCNFAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZAGCNFAT_description" source="ZAGCNFAT.description"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZAGKIMP" source="ZAGKIMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZAGKQTA" source="ZAGKQTA"/>
+      </input>
+      <filter>&quot;0REQUID&quot; &lt;= '$$QUALOK$$'</filter>
+    </calculationView>
+  </calculationViews>
+  <logicalModel id="Projection_1">
+    <descriptions/>
+    <attributes>
+      <attribute id="0CALMONTH" displayAttribute="false">
+        <descriptions defaultDescription="Anno/mese calendario"/>
+        <searchProperties/>
+        <keyMapping schemaName="SAPBWH" columnObjectName="Projection_1" columnName="0CALMONTH"/>
+      </attribute>
+      <attribute id="0CALMONTH2" displayAttribute="false">
+        <descriptions defaultDescription="Mese calendario"/>
+        <searchProperties/>
+        <keyMapping schemaName="SAPBWH" columnObjectName="Projection_1" columnName="0CALMONTH2"/>
+      </attribute>
+      <attribute id="0CALYEAR" displayAttribute="false">
+        <descriptions defaultDescription="Anno calendario"/>
+        <searchProperties/>
+        <keyMapping schemaName="SAPBWH" columnObjectName="Projection_1" columnName="0CALYEAR"/>
+      </attribute>
+      <attribute id="0CURRENCY" displayAttribute="false">
+        <descriptions defaultDescription="Chiave divisa"/>
+        <searchProperties/>
+        <keyMapping schemaName="SAPBWH" columnObjectName="Projection_1" columnName="0CURRENCY"/>
+        <descriptionMapping columnObjectName="Projection_1" columnName="0CURRENCY_description"/>
+      </attribute>
+      <attribute id="0UNIT" displayAttribute="false">
+        <descriptions defaultDescription="Unità di misura"/>
+        <searchProperties/>
+        <keyMapping schemaName="SAPBWH" columnObjectName="Projection_1" columnName="0UNIT"/>
+        <descriptionMapping columnObjectName="Projection_1" columnName="0UNIT_description"/>
+      </attribute>
+      <attribute id="ZAGCCUST" displayAttribute="false">
+        <descriptions defaultDescription="cliente"/>
+        <searchProperties/>
+        <keyMapping schemaName="SAPBWH" columnObjectName="Projection_1" columnName="ZAGCCUST"/>
+        <descriptionMapping columnObjectName="Projection_1" columnName="ZAGCCUST_description"/>
+      </attribute>
+      <attribute id="ZAGCCUST__ZAGCSETI" displayAttribute="false">
+        <descriptions defaultDescription="ZAGCCUST__ZAGCSETI"/>
+        <searchProperties/>
+        <keyMapping schemaName="SAPBWH" columnObjectName="Projection_1" columnName="ZAGCCUST__ZAGCSETI"/>
+        <descriptionMapping columnObjectName="Projection_1" columnName="ZAGCCUST__ZAGCSETI_description"/>
+      </attribute>
+      <attribute id="ZAGCCUST__ZAGCSTATO" displayAttribute="false">
+        <descriptions defaultDescription="ZAGCCUST__ZAGCSTATO"/>
+        <searchProperties/>
+        <keyMapping schemaName="SAPBWH" columnObjectName="Projection_1" columnName="ZAGCCUST__ZAGCSTATO"/>
+        <descriptionMapping columnObjectName="Projection_1" columnName="ZAGCCUST__ZAGCSTATO_description"/>
+      </attribute>
+      <attribute id="ZAGCGMAT" displayAttribute="false">
+        <descriptions defaultDescription="GruppoMat"/>
+        <searchProperties/>
+        <keyMapping schemaName="SAPBWH" columnObjectName="Projection_1" columnName="ZAGCGMAT"/>
+        <descriptionMapping columnObjectName="Projection_1" columnName="ZAGCGMAT_description"/>
+      </attribute>
+      <attribute id="ZAGCMAT" displayAttribute="false">
+        <descriptions defaultDescription="Materiale"/>
+        <searchProperties/>
+        <keyMapping schemaName="SAPBWH" columnObjectName="Projection_1" columnName="ZAGCMAT"/>
+        <descriptionMapping columnObjectName="Projection_1" columnName="ZAGCMAT_description"/>
+      </attribute>
+      <attribute id="ZAGCMAT__ZAGCGMAT" displayAttribute="false">
+        <descriptions defaultDescription="ZAGCMAT__ZAGCGMAT"/>
+        <searchProperties/>
+        <keyMapping schemaName="SAPBWH" columnObjectName="Projection_1" columnName="ZAGCMAT__ZAGCGMAT"/>
+        <descriptionMapping columnObjectName="Projection_1" columnName="ZAGCMAT__ZAGCGMAT_description"/>
+      </attribute>
+      <attribute id="ZAGCNFAT" displayAttribute="false">
+        <descriptions defaultDescription="Nr Fattura"/>
+        <searchProperties/>
+        <keyMapping schemaName="SAPBWH" columnObjectName="Projection_1" columnName="ZAGCNFAT"/>
+        <descriptionMapping columnObjectName="Projection_1" columnName="ZAGCNFAT_description"/>
+      </attribute>
+    </attributes>
+    <calculatedAttributes/>
+    <privateDataFoundation>
+      <tableProxies/>
+      <joins/>
+      <layout>
+        <shapes/>
+      </layout>
+    </privateDataFoundation>
+    <baseMeasures>
+      <measure id="ZAGKIMP" aggregationType="sum" measureType="amount">
+        <descriptions defaultDescription="Importo">
+          <description description="Importo" language="I"/>
+        </descriptions>
+        <unitCurrencyAttribute attributeName="0CURRENCY"/>
+        <measureMapping columnObjectName="Projection_1" columnName="ZAGKIMP"/>
+      </measure>
+      <measure id="ZAGKQTA" aggregationType="sum" measureType="quantity">
+        <descriptions defaultDescription="Quantità">
+          <description description="Quantità" language="I"/>
+        </descriptions>
+        <unitCurrencyAttribute attributeName="0UNIT"/>
+        <measureMapping columnObjectName="Projection_1" columnName="ZAGKQTA"/>
+      </measure>
+    </baseMeasures>
+    <calculatedMeasures/>
+    <restrictedMeasures/>
+    <localDimensions/>
+  </logicalModel>
+  <layout>
+    <shapes>
+      <shape modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+        <upperLeftCorner x="40" y="85"/>
+      </shape>
+    </shapes>
+  </layout>
+</Calculation:scenario>

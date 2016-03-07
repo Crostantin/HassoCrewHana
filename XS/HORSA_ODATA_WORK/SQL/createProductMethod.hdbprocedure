@@ -1,0 +1,38 @@
+PROCEDURE "OSCHEMA"."HASSO_CREW.XS.HORSA_ODATA_WORK.SQL::createProductMethod" (
+	IN I_ROW "OSCHEMA"."HASSO_CREW.XS.HORSA_ODATA_WORK.data::OTableCreate.Procedures.in_product",
+	OUT ERRORS "OSCHEMA"."HASSO_CREW.XS.HORSA_ODATA_WORK.data::OTableCreate.Procedures.out_error"
+	 ) 
+	 
+	LANGUAGE SQLSCRIPT
+	SQL SECURITY INVOKER 
+	DEFAULT SCHEMA "OSCHEMA"
+	--READS SQL DATA 
+	AS
+BEGIN
+/***************************** 
+	Write your procedure logic 
+ *****************************/
+ 
+ declare i_name nvarchar(20);
+ declare i_number integer;
+ 
+ -- acquisici i dati ==> per test: moltiplica un dato in ingresso per 100
+ select NAME, NUMBER*100 into i_name, i_number from :I_ROW;
+ 
+ -- test su name
+ IF (:i_name = '') THEN
+ 	ERRORS = select 
+ 				666 as "HTTP_STATUS_CODE",
+ 				'Empty Name' as "ERROR_MSG",
+ 				'Must send the name' as "ERROR_DETAIL"
+ 			from dummy;
+ ELSE
+ 	-- scrivi i dati
+ 	insert into "OSCHEMA"."HASSO_CREW.XS.HORSA_ODATA_WORK.data::OTableCreate.product" values(
+ 		"OSCHEMA"."HASSO_CREW.XS.HORSA_ODATA_WORK.data::OTableCreateSeq".NEXTVAL,
+ 		i_name,
+ 		i_number);
+ 
+ END IF ;
+ 
+END;
