@@ -10,6 +10,7 @@ PROCEDURE "GPSTRACKER"."HASSO_CREW.XS.GEOTracker.service::insertRowTracker" (
 BEGIN
  
  	-- add comment here now
+ 	-- git test !!!
 	declare lv_LAT string;
 	declare lv_LONG string;
 
