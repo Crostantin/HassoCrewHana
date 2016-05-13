@@ -1,8 +1,0 @@
-role HASSO_CREW.XS.GEOTracker.init::UpdateGPS {
-	
-	schema  HASSO_CREW.XS.GEOTracker.init:GPSTRACKER.hdbschema: SELECT, INSERT, CREATE ANY;
-	package HASSO_CREW.XS.GEOTracker: REPO.READ, REPO.EDIT_NATIVE_OBJECTS, REPO.ACTIVATE_NATIVE_OBJECTS, REPO.MAINTAIN_NATIVE_PACKAGES;
-	
-	//sql object tracker.info.init:GPSTracker.hdbtable: SELECT, INSERT, UPDATE, DELETE;
-
-}

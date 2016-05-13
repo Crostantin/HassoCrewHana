@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AccessControl="http://www.sap.com/ndb/SQLCoreModelAccessControl.ecore" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" id="ZATBCSALS" defaultClient="$$client$$" defaultLanguage="$$language$$" visibility="reportingEnabled" calculationScenarioType="TREE_BASED">
+  <origin entityName="ZATBCSALS" entityType="CUBE" system="BWH"/>
+  <descriptions defaultDescription="CUBO_VENDITE A.TRAVINO"/>
+  <defaultSchema schemaName="SAPBWH"/>
+  <localVariables>
+    <variable id="QUALOK" parameter="true">
+      <descriptions defaultDescription="QUALOK"/>
+      <variableProperties>
+        <derivationRule>
+          <resultColumn schemaName="SAPBWH" columnObjectName="RSMDATASTATE" columnName="QUALOK"/>
+          <columnFilter columnName="INFOCUBE">
+            <valueFilter xsi:type="AccessControl:SingleValueFilter" including="true" value="ZATBCSALS"/>
+          </columnFilter>
+        </derivationRule>
+      </variableProperties>
+    </variable>
+  </localVariables>
+  <variableMappings/>
+  <dataSources>
+    <DataSource id="ZATBCSALS_INTERNAL" type="ANALYTIC_VIEW">
+      <viewAttributes allViewAttributes="true"/>
+      <resourceUri>/HASSO_CREW.BW.TMP/analyticviews/ZATBCSALS_INTERNAL</resourceUri>
+    </DataSource>
+  </dataSources>
+  <calculationViews>
+    <calculationView xsi:type="Calculation:ProjectionView" id="Projection_1">
+      <viewAttributes>
+        <viewAttribute id="0CALMONTH"/>
+        <viewAttribute id="0CALYEAR"/>
+        <viewAttribute id="0CURRENCY"/>
+        <viewAttribute id="0CURRENCY_description"/>
+        <viewAttribute id="0REQUID"/>
+        <viewAttribute id="0UNIT"/>
+        <viewAttribute id="0UNIT_description"/>
+        <viewAttribute id="ZATCCSAL"/>
+        <viewAttribute id="ZATCCSAL_description"/>
+        <viewAttribute id="ZATCCUST"/>
+        <viewAttribute id="ZATCCUST_description"/>
+        <viewAttribute id="ZATCMAT"/>
+        <viewAttribute id="ZATCMAT_description"/>
+        <viewAttribute id="ZTCGMAT"/>
+        <viewAttribute id="ZTCGMAT_description"/>
+        <viewAttribute id="ZATKIMP"/>
+        <viewAttribute id="ZATKQTA"/>
+      </viewAttributes>
+      <calculatedViewAttributes/>
+      <input node="#ZATBCSALS_INTERNAL">
+        <mapping xsi:type="Calculation:AttributeMapping" target="0CALMONTH" source="0CALMONTH"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="0CALYEAR" source="0CALYEAR"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="0CURRENCY" source="0CURRENCY"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="0CURRENCY_description" source="0CURRENCY.description"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="0REQUID" source="0REQUID"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="0UNIT" source="0UNIT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="0UNIT_description" source="0UNIT.description"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZATCCSAL" source="ZATCCSAL"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZATCCSAL_description" source="ZATCCSAL.description"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZATCCUST" source="ZATCCUST"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZATCCUST_description" source="ZATCCUST.description"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZATCMAT" source="ZATCMAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZATCMAT_description" source="ZATCMAT.description"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZTCGMAT" source="ZTCGMAT"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZTCGMAT_description" source="ZTCGMAT.description"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZATKIMP" source="ZATKIMP"/>
+        <mapping xsi:type="Calculation:AttributeMapping" target="ZATKQTA" source="ZATKQTA"/>
+      </input>
+      <filter>&quot;0REQUID&quot; &lt;= '$$QUALOK$$'</filter>
+    </calculationView>
+  </calculationViews>
+  <logicalModel id="Projection_1">
+    <descriptions/>
+    <attributes>
+      <attribute id="0CALMONTH" displayAttribute="false">
+        <descriptions defaultDescription="Anno/mese calendario"/>
+        <searchProperties/>
+        <keyMapping schemaName="SAPBWH" columnObjectName="Projection_1" columnName="0CALMONTH"/>
+      </attribute>
+      <attribute id="0CALYEAR" displayAttribute="false">
+        <descriptions defaultDescription="Anno calendario"/>
+        <searchProperties/>
+        <keyMapping schemaName="SAPBWH" columnObjectName="Projection_1" columnName="0CALYEAR"/>
+      </attribute>
+      <attribute id="0CURRENCY" displayAttribute="false">
+        <descriptions defaultDescription="Chiave divisa"/>
+        <searchProperties/>
+        <keyMapping schemaName="SAPBWH" columnObjectName="Projection_1" columnName="0CURRENCY"/>
+        <descriptionMapping columnObjectName="Projection_1" columnName="0CURRENCY_description"/>
+      </attribute>
+      <attribute id="0UNIT" displayAttribute="false">
+        <descriptions defaultDescription="Unità di misura"/>
+        <searchProperties/>
+        <keyMapping schemaName="SAPBWH" columnObjectName="Projection_1" columnName="0UNIT"/>
+        <descriptionMapping columnObjectName="Projection_1" columnName="0UNIT_description"/>
+      </attribute>
+      <attribute id="ZATCCSAL" displayAttribute="false">
+        <descriptions defaultDescription="VENDITE"/>
+        <searchProperties/>
+        <keyMapping schemaName="SAPBWH" columnObjectName="Projection_1" columnName="ZATCCSAL"/>
+        <descriptionMapping columnObjectName="Projection_1" columnName="ZATCCSAL_description"/>
+      </attribute>
+      <attribute id="ZATCCUST" displayAttribute="false">
+        <descriptions defaultDescription="CLIENTE"/>
+        <searchProperties/>
+        <keyMapping schemaName="SAPBWH" columnObjectName="Projection_1" columnName="ZATCCUST"/>
+        <descriptionMapping columnObjectName="Projection_1" columnName="ZATCCUST_description"/>
+      </attribute>
+      <attribute id="ZATCMAT" displayAttribute="false">
+        <descriptions defaultDescription="MATERIALE"/>
+        <searchProperties/>
+        <keyMapping schemaName="SAPBWH" columnObjectName="Projection_1" columnName="ZATCMAT"/>
+        <descriptionMapping columnObjectName="Projection_1" columnName="ZATCMAT_description"/>
+      </attribute>
+      <attribute id="ZTCGMAT" displayAttribute="false">
+        <descriptions defaultDescription="GRUPPO MAT"/>
+        <searchProperties/>
+        <keyMapping schemaName="SAPBWH" columnObjectName="Projection_1" columnName="ZTCGMAT"/>
+        <descriptionMapping columnObjectName="Projection_1" columnName="ZTCGMAT_description"/>
+      </attribute>
+    </attributes>
+    <calculatedAttributes/>
+    <privateDataFoundation>
+      <tableProxies/>
+      <joins/>
+      <layout>
+        <shapes/>
+      </layout>
+    </privateDataFoundation>
+    <baseMeasures>
+      <measure id="ZATKIMP" aggregationType="sum" measureType="amount">
+        <descriptions defaultDescription="IMPORTO">
+          <description description="IMPORTO" language="I"/>
+        </descriptions>
+        <unitCurrencyAttribute attributeName="0CURRENCY"/>
+        <measureMapping columnObjectName="Projection_1" columnName="ZATKIMP"/>
+      </measure>
+      <measure id="ZATKQTA" aggregationType="sum" measureType="quantity">
+        <descriptions defaultDescription="QUANTITà">
+          <description description="QUANTITà" language="I"/>
+        </descriptions>
+        <unitCurrencyAttribute attributeName="0UNIT"/>
+        <measureMapping columnObjectName="Projection_1" columnName="ZATKQTA"/>
+      </measure>
+    </baseMeasures>
+    <calculatedMeasures/>
+    <restrictedMeasures/>
+    <localDimensions/>
+  </logicalModel>
+  <layout>
+    <shapes>
+      <shape modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+        <upperLeftCorner x="40" y="85"/>
+      </shape>
+    </shapes>
+  </layout>
+</Calculation:scenario>
