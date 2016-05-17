@@ -1,7 +1,7 @@
 USE [CDA_DW]
 GO
 
-/****** Object:  UserDefinedFunction [dbo].[CDA_CLI_PAGAMENTI_PASSO1]    Script Date: 13/05/2016 10:26:59 ******/
+/****** Object:  UserDefinedFunction [dbo].[CDA_CLI_PAGAMENTI_PASSO1]    Script Date: 17/05/2016 11:24:48 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -204,12 +204,18 @@ begin
 	a.NUM_RIGA_PAGAMENTO
 	--into #TMP_Fatture_Gestite
 	from WT_CLI_RESI_PASSO2 a
-	join M_CHIAVE_CONTABILE b
-	on (a.BSCHL=b.BSCHL)
-	where b.TIPO='dare'
-	and TIPO_CHIAVE='Fatture'
-	and DESTINAZIONE='Cliente'
-	and STATUS=1
+	join (
+			select a.BUKRS, a.GJAHR, a.BELNR, a.BUZEI
+			from WT_CLI_RESI_PASSO2 a
+			join M_CHIAVE_CONTABILE b
+			on (a.BSCHL=b.BSCHL)
+			where b.TIPO='dare'
+			and TIPO_CHIAVE='Fatture'
+			and DESTINAZIONE='Cliente'
+			and STATUS=1
+			and ROWID=1
+	) b
+	on (a.BUKRS=b.BUKRS and a.GJAHR=b.GJAHR and a.BELNR=b.BELNR and a.BUZEI=b.BUZEI)
 	--17925
 	union		
 	--Fatture con Pagamenti diretti associati

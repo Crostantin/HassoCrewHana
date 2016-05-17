@@ -1,7 +1,7 @@
 USE [CDA_DW]
 GO
 
-/****** Object:  UserDefinedFunction [dbo].[CDA_CLI_RESI_PASSO2]    Script Date: 13/05/2016 10:28:25 ******/
+/****** Object:  UserDefinedFunction [dbo].[CDA_CLI_RESI_PASSO2]    Script Date: 17/05/2016 11:24:12 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -200,7 +200,7 @@ DECLARE @Temp_Fatture TABLE (
 	--Pagamenti
 	insert into @TMP_Passo2_Resi
 	select 
-	ROW_NUMBER() over (order by AUGBL, AUGDT, KUNNR, BUKRS, GJAHR, BELNR, BUZEI) ROWID,
+	ROW_NUMBER() over (order by  a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR, a.BLDAT, a.BELNR, a.BUZEI) ROWID,
 	a.BSCHL,
 	--Documenti di Pareggio
 	AUGBL, AUGDT, KUNNR, 
@@ -224,7 +224,7 @@ DECLARE @Temp_Fatture TABLE (
 	--Fatture
 	insert into @TMP_Passo2_Fatture
 	select 
-	ROW_NUMBER() over (order by a.AUGBL, a.AUGDT, a.KUNNR, a.BUKRS, a.GJAHR, a.BELNR, a.BUZEI) ROWID,
+	ROW_NUMBER() over (order by  a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR, a.BLDAT, a.BELNR, a.BUZEI) ROWID,
 	a.BSCHL,
 	--Documenti di Pareggio
 	AUGBL, AUGDT, KUNNR, 

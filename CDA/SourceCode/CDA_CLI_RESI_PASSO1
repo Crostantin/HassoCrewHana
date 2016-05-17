@@ -1,7 +1,7 @@
 USE [CDA_DW]
 GO
 
-/****** Object:  UserDefinedFunction [dbo].[CDA_CLI_RESI_PASSO1]    Script Date: 13/05/2016 10:27:52 ******/
+/****** Object:  UserDefinedFunction [dbo].[CDA_CLI_RESI_PASSO1]    Script Date: 17/05/2016 11:22:03 ******/
 SET ANSI_NULLS ON
 GO
 

@@ -1,7 +1,7 @@
 USE [CDA_DW]
 GO
 
-/****** Object:  UserDefinedFunction [dbo].[CDA_FOR_PAGAMENTI_PASSO2]    Script Date: 13/05/2016 10:29:16 ******/
+/****** Object:  UserDefinedFunction [dbo].[CDA_FOR_PAGAMENTI_PASSO2]    Script Date: 17/05/2016 11:25:54 ******/
 SET ANSI_NULLS ON
 GO
 
