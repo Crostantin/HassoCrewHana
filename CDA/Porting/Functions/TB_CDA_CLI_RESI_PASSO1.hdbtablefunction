@@ -1,4 +1,4 @@
-FUNCTION "CDA_TMP"."HASSO_CREW.CDA.Porting.Functions::CDA_CLI_RESI_PASSO1" ( ) 
+FUNCTION "CDA_TMP"."HASSO_CREW.CDA.Porting.Functions::TB_CDA_CLI_RESI_PASSO1" ( ) 
 	RETURNS TABLE (
 		--return_table_type	
 	BUKRS NVARCHAR(4),

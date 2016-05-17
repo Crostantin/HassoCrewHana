@@ -9,7 +9,7 @@ BEGIN
  *****************************/
  
  
- WT_CLI_RESI_PASSO1 = select * from "CDA_TMP"."HASSO_CREW.CDA.Porting.Functions::CDA_CLI_RESI_PASSO1" ();
+ WT_CLI_RESI_PASSO1 = select * from "CDA_TMP"."HASSO_CREW.CDA.Porting.Functions::TB_CDA_CLI_RESI_PASSO1" ();
  M_CHIAVE_CONTABILE = select * from "HT"."M_CHIAVE_CONTABILE";
  
 	--PASSO2: Gestione delle righe di Pareggio
