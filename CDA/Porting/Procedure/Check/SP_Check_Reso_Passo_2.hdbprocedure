@@ -1,83 +1,22 @@
-FUNCTION "HT"."HASSO_CREW.CDA.Porting.Functions::TB_CDA_PAGAMENTI_2" ( ) 
-RETURNS TABLE(
-	--return_table_type
-	BUKRS NVARCHAR(4),
-	GJAHR DECIMAL(4,0),
-	BELNR NVARCHAR(10),
-	BUZEI DECIMAL(3,0),
-	"ROWID" BIGINT,
-	KUNNR NVARCHAR(10),
-	BSCHL NVARCHAR(2),
-	STATUS INTEGER,
-	BLDAT DATE,
-	NETDT DATE,
-	DMSHB DECIMAL(38,2),
-	WRSHB DECIMAL(38,2),
-	VAL_PAGATO_ALLOCATO DECIMAL(38,2),
-	VAL_PAGATO_ALLOCATO_GMP DECIMAL(38,2),
-	VAL_PAGATO_ALLOCATO_LC DECIMAL(38,2),
-	VAL_PAGATO_ALLOCATO_GMP_LC DECIMAL(38,2),
-	DATA_PAGAMENTO DATE,
-	ESERCIZIO_PAGAMENTO DECIMAL(4,0),
-	DOCUMENTO_PAGAMENTO NVARCHAR(10),
-	NUM_RIGA_PAGAMENTO DECIMAL(3,0),
-	AUGBL NVARCHAR(10),
-	AUGDT DATE,
-	DATA_PAREGGIO DATE
-	)
-	
+PROCEDURE "CDA_TMP"."HASSO_CREW.CDA.Porting.Procedure.Check::SP_Check_Reso_Passo_2" ( ) 
 	LANGUAGE SQLSCRIPT
-	SQL SECURITY INVOKER AS
+	SQL SECURITY INVOKER 
+	DEFAULT SCHEMA "CDA_TMP"
+	READS SQL DATA AS
 BEGIN
-
 /***************************** 
-	Write your function logic
+	Write your procedure logic 
  *****************************/
-
-WT_CLI_PASSO1  = 
-	SELECT
-		 "BUKRS",
-		 "BELNR",
-		 "BSCHL",
-		 "AUGBL",
-		 "KUNNR",
-		 "DOCUMENTO_PAGAMENTO",
-		 sum("GJAHR") AS "GJAHR",
-		 sum("BUZEI") AS "BUZEI",
-		 min("AUGDT") AS "AUGDT",
-		 min("BLDAT") AS "BLDAT",
-		 min("NETDT") AS "NETDT",
-		 sum("STATUS") AS "STATUS",
-		 sum("DMSHB") AS "DMSHB",
-		 sum("WRSHB") AS "WRSHB",
-		 sum("ROWID") AS "ROWID",
-		 sum("VAL_PAGATO_ALLOCATO") AS "VAL_PAGATO_ALLOCATO",
-		 sum("VAL_PAGATO_ALLOCATO_GMP") AS "VAL_PAGATO_ALLOCATO_GMP",
-		 sum("VAL_PAGATO_ALLOCATO_LC") AS "VAL_PAGATO_ALLOCATO_LC",
-		 sum("VAL_PAGATO_ALLOCATO_GMP_LC") AS "VAL_PAGATO_ALLOCATO_GMP_LC",
-		 min("DATA_PAGAMENTO") AS "DATA_PAGAMENTO",
-		 sum("ESERCIZIO_PAGAMENTO") AS "ESERCIZIO_PAGAMENTO",
-		 sum("NUM_RIGA_PAGAMENTO") AS "NUM_RIGA_PAGAMENTO" 
-	FROM "_SYS_BIC"."HASSO_CREW.CDA.Porting.Views/CDA_CLI_PAGAMENTI_PASSO1" 
-	GROUP BY "BUKRS",
-		 "BELNR",
-		 "BSCHL",
-		 "AUGBL",
-		 "KUNNR",
-		 "DOCUMENTO_PAGAMENTO"
-	 ;
-	 
-	M_CHIAVE_CONTABILE = select * from "HT"."M_CHIAVE_CONTABILE";
-
-
+ 
+ 
+ WT_CLI_RESI_PASSO1 = select * from "CDA_TMP"."HASSO_CREW.CDA.Porting.Functions::CDA_CLI_RESI_PASSO1" ();
+ M_CHIAVE_CONTABILE = select * from "HT"."M_CHIAVE_CONTABILE";
+ 
 	--PASSO2: Gestione delle righe di Pareggio
-	-- ... To do 
 
-
-	--Passo2.1: gestisco le runningsum delle fatture e dei pagamenti
-
+	--Passo2.1: gestisco le runningsum delle fatture e dei Accrediti a cliente
 	--Pagamenti
-	TMP_Passo2_Pagamenti =
+	TMP_Passo2_Resi = 
 		select 
 		ROW_NUMBER() over (order by AUGBL, AUGDT, KUNNR, BUKRS, GJAHR, BELNR, BUZEI) "ROWID",
 		a.BSCHL,
@@ -92,18 +31,17 @@ WT_CLI_PASSO1  =
 		SUM(A.WRSHB) OVER (PARTITION BY  a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR ORDER BY a.BLDAT, a.BELNR, a.BUZEI) RUNNINGSUM_PAGAMENTO_LC,
 		BLDAT
 		--into #TMP_Passo2_Pagamenti
-		FROM :WT_CLI_PASSO1 a
+		FROM :WT_CLI_RESI_PASSO1 a
 		inner join :M_CHIAVE_CONTABILE b
 		on (a.BSCHL=b.BSCHL)
 		where b.DESTINAZIONE='Cliente'
-		and b.TIPO_CHIAVE='Pagamenti'
-		--Condizione da imputare
-		--and rtrim(ltrim(ifnull(AUGBL, '')))<>''
+		and b.TIPO_CHIAVE='Fatture'
+		and b.TIPO = 'avere'
 		and a.STATUS=0
 	;
-	
+
 	--Fatture
-	TMP_Passo2_Fatture =
+	TMP_Passo2_Fatture = 
 		select 
 		ROW_NUMBER() over (order by a.AUGBL, a.AUGDT, a.KUNNR, a.BUKRS, a.GJAHR, a.BELNR, a.BUZEI) "ROWID",
 		a.BSCHL,
@@ -119,29 +57,25 @@ WT_CLI_PASSO1  =
 		SUM(A.WRSHB + ifnull(a.VAL_PAGATO_ALLOCATO_LC, 0)) OVER (PARTITION BY  a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR ORDER BY a.BLDAT, a.BELNR, a.BUZEI) RUNNINGSUM_FATTURA_LC,
 		BLDAT, NETDT
 		--into #TMP_Passo2_Fatture
-		FROM :WT_CLI_PASSO1 a
-		join :M_CHIAVE_CONTABILE b
+		FROM :WT_CLI_RESI_PASSO1 a
+		inner join :M_CHIAVE_CONTABILE b
 		on (a.BSCHL=b.BSCHL)
-		left join :TMP_Passo2_Fatture_Elise c
-		on (a.BUKRS=c.BUKRS and a.GJAHR=c.GJAHR and a.BELNR=c.BELNR and a.BUZEI=c.BUZEI)
 		where b.DESTINAZIONE='Cliente'
 		and b.TIPO_CHIAVE='Fatture'
-		--Condizione da imputareand rtrim(ltrim(ifnull(AUGBL, '')))<>''
-		and a.BSCHL not in ('11', '12') -- Eliminiamo le note di credito dal calcolo dei pagamenti
-		and a.STATUS=0
-		and c.BUKRS is null
+		and b.TIPO = 'dare'
+		and STATUS=0
 	;
 
 
 	--seleziono per ogni fattura il minimo running sum di pagamenti che copra il runningsum delle fatture
 
 	--Passo1: seleziono tutte le fatture associate almeno ad un pagamento
-	TMP_Passo2_P0_A =
+	TMP_Passo2_P0_A = 
 		select 
 		a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR, a."ROWID" NUMROW_FATTURA, min(b."ROWID") NUMROW_PAGAMENTO
 		--into #TMP_Passo2_P0_A
 		from :TMP_Passo2_Fatture a 
-		join :TMP_Passo2_Pagamenti b
+		join :TMP_Passo2_Resi b
 		on (a.AUGBL=b.AUGBL and a.AUGDT=b.AUGDT and a.BUKRS=b.BUKRS and a.KUNNR=b.KUNNR)
 		where RUNNINGSUM_FATTURA<=abs(RUNNINGSUM_PAGAMENTO)
 		group by a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR, a."ROWID"
@@ -151,64 +85,64 @@ WT_CLI_PASSO1  =
 	--Passo2: Per tutte le fatture non presenti all'interno dela passo1, seleziono la prima e la associo automaticamente al pagamento maggiore possibile
 		--> viene coperta solo parzialmente, quindi prendo la più vecchia
 
-	TMP_Passo2_P0 = 
+	TMP_Passo2_P0 =
 		(select BUKRS, AUGBL, AUGDT, KUNNR, NUMROW_FATTURA, NUMROW_PAGAMENTO
 		--into #TMP_Passo2_P0
 		from :TMP_Passo2_P0_A)
-		union all
+			union all
 		(select a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR, min(a."ROWID") NUMROW_FATTURA, max(b."ROWID") NUMROW_PAGAMENTO
 		from :TMP_Passo2_Fatture a 
-		join :TMP_Passo2_Pagamenti b
+		join :TMP_Passo2_Resi b
 		on (a.AUGBL=b.AUGBL and a.AUGDT=b.AUGDT and a.BUKRS=b.BUKRS and a.KUNNR=b.KUNNR)
 		left join :TMP_Passo2_P0_A c
 		on (a."ROWID"=c.NUMROW_FATTURA)
 		where c.NUMROW_FATTURA is null
-		group by a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR)
-		--order by 1,2
+		group by a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR --order by 1,2)
+		)
 	;
 
 	----Seleziono per ogni rigafattura, il runningsum del valore precedente
-	TMP_Passo2_P1 = 
+	TMP_Passo2_P1 =
 		select a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR, a.NUMROW_FATTURA, a.NUMROW_PAGAMENTO, max(b.NUMROW_FATTURA) FATTURA_LESS1, max(b.NUMROW_PAGAMENTO) PAGAMENTO_LESS1
 		--into #TMP_Passo2_P1
 		From :TMP_Passo2_P0 a
 		left join :TMP_Passo2_P0 b
 		on (a.BUKRS=b.BUKRS and a.AUGBL=b.AUGBL and a.AUGDT=b.AUGDT and a.KUNNR=b.KUNNR and a.NUMROW_FATTURA>b.NUMROW_FATTURA)
 		group by a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR, a.NUMROW_FATTURA, a.NUMROW_PAGAMENTO
-	;
+		;
 
 	----Gestisco gli intervalli di pagamento
 	TMP_Passo2_P2 =
-		select ROW_NUMBER() over (order by a.NUMROW_FATTURA, NUMROW_PAGAMENTO) "ROWID", a.*
-		--into #TMP_Passo2_P2
-		from
+	select ROW_NUMBER() over (order by a.NUMROW_FATTURA, NUMROW_PAGAMENTO) "ROWID", a.*
+	--into #TMP_Passo2_P2
+	from
+	(
+		select a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR, a.NUMROW_FATTURA, ifnull(b."ROWID", c.MINROWID) NUMROW_PAGAMENTO
+		from :TMP_Passo2_P1 a
+		inner join 
 		(
-			select a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR, a.NUMROW_FATTURA, ifnull(b."ROWID", MINROWID) NUMROW_PAGAMENTO
-			from :TMP_Passo2_P1 a
-			inner join 
-			(
-				--Per ogni documento di pareggio devo gestire il minimo documento contabile di pagamento (lowerbound)
-				select BUKRS, AUGBL, AUGDT, KUNNR, min ("ROWID") MINROWID
-				from :TMP_Passo2_Pagamenti
-				group by BUKRS, AUGBL, AUGDT, KUNNR
-			) c
-			on (a.BUKRS=c.BUKRS and a.AUGBL=c.AUGBL and a.AUGDT=c.AUGDT and a.KUNNR=c.KUNNR)
-			left join :TMP_Passo2_Pagamenti b
-			on (a.BUKRS=b.BUKRS and a.AUGBL=b.AUGBL and a.AUGDT=b.AUGDT and a.KUNNR=b.KUNNR and b."ROWID" between ifnull(a.PAGAMENTO_LESS1 , c.MINROWID) and a.NUMROW_PAGAMENTO)
-		) a
+			--Per ogni documento di pareggio devo gestire il minimo documento contabile di pagamento (lowerbound)
+			select BUKRS, AUGBL, AUGDT, KUNNR, min ("ROWID") MINROWID
+			from :TMP_Passo2_Resi
+			group by BUKRS, AUGBL, AUGDT, KUNNR
+		) c
+		on (a.BUKRS=c.BUKRS and a.AUGBL=c.AUGBL and a.AUGDT=c.AUGDT and a.KUNNR=c.KUNNR)
+		left join :TMP_Passo2_Resi b
+		on (a.BUKRS=b.BUKRS and a.AUGBL=b.AUGBL and a.AUGDT=b.AUGDT and a.KUNNR=b.KUNNR and b."ROWID" between ifnull(a.PAGAMENTO_LESS1 , c.MINROWID) and a.NUMROW_PAGAMENTO)
+	) a
 	;
 
 	----Seleziono per ogni rigafattura, il runningsum del valore precedente
 	TMP_Passo2_P3 =
-		select a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR, a.NUMROW_FATTURA, a.NUMROW_PAGAMENTO, max(b.NUMROW_FATTURA) FATTURA_LESS1, max(b.NUMROW_PAGAMENTO) PAGAMENTO_LESS1
-		--into #TMP_Passo2_P3
-		From :TMP_Passo2_P2 a
-		left join :TMP_Passo2_P2 b
-		on (a.BUKRS=b.BUKRS and a.AUGBL=b.AUGBL and a.AUGDT=b.AUGDT and a.KUNNR=b.KUNNR AND a."ROWID">b."ROWID")
-		group by a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR, a.NUMROW_FATTURA, a.NUMROW_PAGAMENTO
+	select a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR, a.NUMROW_FATTURA, a.NUMROW_PAGAMENTO, max(b.NUMROW_FATTURA) FATTURA_LESS1, max(b.NUMROW_PAGAMENTO) PAGAMENTO_LESS1
+	--into #TMP_Passo2_P3
+	From :TMP_Passo2_P2 a
+	left join :TMP_Passo2_P2 b
+	on (a.BUKRS=b.BUKRS and a.AUGBL=b.AUGBL and a.AUGDT=b.AUGDT and a.KUNNR=b.KUNNR AND a."ROWID">b."ROWID")
+	group by a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR, a.NUMROW_FATTURA, a.NUMROW_PAGAMENTO
 	;
 	
-	TMP_Passo2_P4 = 
+	TMP_Passo2_P4 =
 		select  a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR, a.NUMROW_FATTURA, a.FATTURA_LESS1 NUMROW_FATTURA_LESS1, a.NUMROW_PAGAMENTO, a.PAGAMENTO_LESS1 NUMROW_PAGAMENTO_LESS1,
 		b.VAL_FATTURA, b.RUNNINGSUM_FATTURA, c.VAL_PAGAMENTO, c.RUNNINGSUM_PAGAMENTO, ifnull(d.RUNNINGSUM_FATTURA, 0) RUNNINGSUM_FATTURA_LESS1,
 		b.VAL_FATTURA_LC, b.RUNNINGSUM_FATTURA_LC, c.VAL_PAGAMENTO_LC, c.RUNNINGSUM_PAGAMENTO_LC, ifnull(d.RUNNINGSUM_FATTURA_LC, 0) RUNNINGSUM_FATTURA_LC_LESS1
@@ -216,22 +150,22 @@ WT_CLI_PASSO1  =
 		from :TMP_Passo2_P3 a
 		join :TMP_Passo2_Fatture b
 		on (a.BUKRS=b.BUKRS and a.AUGBL=b.AUGBL and a.AUGDT=b.AUGDT and a.KUNNR=b.KUNNR and a.NUMROW_FATTURA=b."ROWID")
-		join :TMP_Passo2_Pagamenti c
+		inner join :TMP_Passo2_Resi c
 		on (a.BUKRS=c.BUKRS and a.AUGBL=c.AUGBL and a.AUGDT=c.AUGDT and a.KUNNR=c.KUNNR and a.NUMROW_PAGAMENTO=c."ROWID")
 		left join :TMP_Passo2_Fatture d
 		on (a.BUKRS=d.BUKRS and a.AUGBL=d.AUGBL and a.AUGDT=d.AUGDT and a.KUNNR=d.KUNNR and a.FATTURA_LESS1=d."ROWID")
 	;
 	
-	--Generiamo il max "ROWID" per ogni fattura
+	--Generiamo il max rowid per ogni fattura
 	Temp_Fatture =
 		select BUKRS, GJAHR, BELNR, BUZEI, ifnull(max("ROWID"), 0) MAX_ROWID
 		--into #Temp_Fatture
-		From :WT_CLI_PASSO1
+		From :WT_CLI_RESI_PASSO1
 		group by BUKRS, GJAHR, BELNR, BUZEI
 	;
 	--Generiamo il valore della tabella
 	TMP_Passo2_P5 =
-		select BUKRS, GJAHR, BELNR, BUZEI, "ROWID", 
+		(select BUKRS, GJAHR, BELNR, BUZEI, "ROWID", 
 		a.KUNNR,
 		a.BSCHL,
 		a.BLDAT, a.NETDT,
@@ -247,15 +181,16 @@ WT_CLI_PASSO1  =
 		null AUGDT,
 		null DATA_PAREGGIO
 		--into #TMP_Passo2_P5
-		from :WT_CLI_PASSO1 a
-		join :M_CHIAVE_CONTABILE b
+		from :WT_CLI_RESI_PASSO1 a
+		inner join :M_CHIAVE_CONTABILE b
 		on (a.BSCHL=b.BSCHL)
 		where "ROWID" is not null --Fatture già elaborate
 		and  b.DESTINAZIONE='Cliente'
 		and b.TIPO_CHIAVE='Fatture'
-		union all
-		--Pagamenti elaborati in questo giro
-		select a.BUKRS, a.GJAHR, a.BELNR, a.BUZEI, 1 "ROWID", 
+		and b.TIPO = 'dare')
+	union all
+	--Pagamenti elaborati in questo giro
+		(select a.BUKRS, a.GJAHR, a.BELNR, a.BUZEI, 1 "ROWID", 
 		a.KUNNR,
 		a.BSCHL,
 		a.BLDAT, a.NETDT,
@@ -270,16 +205,17 @@ WT_CLI_PASSO1  =
 		a.AUGBL, 
 		a.AUGDT,
 		null DATA_PAREGGIO
-		from :WT_CLI_PASSO1 a
-		join :TMP_Passo2_Pagamenti b
+		from :WT_CLI_RESI_PASSO1 a
+		join :TMP_Passo2_Resi b
 		on (a.BUKRS=b.BUKRS and a.GJAHR=b.GJAHR and a.BELNR=b.BELNR and a.BUZEI=b.BUZEI)
-		join :M_CHIAVE_CONTABILE c
+		inner join :M_CHIAVE_CONTABILE c
 		on (a.BSCHL=c.BSCHL)
 		where c.DESTINAZIONE='Cliente'
-		and c.TIPO_CHIAVE='Pagamenti'
-		union
-		--Pagamenti elaborati nel giro precedente
-		select a.BUKRS, a.GJAHR, a.BELNR, a.BUZEI, 1 "ROWID", 
+		and c.TIPO_CHIAVE='Fatture'
+		and c.TIPO = 'avere')
+	union
+	--Pagamenti elaborati nel giro precedente
+		(select a.BUKRS, a.GJAHR, a.BELNR, a.BUZEI, 1 "ROWID", 
 		a.KUNNR,
 		a.BSCHL,
 		a.BLDAT, a.NETDT,
@@ -294,14 +230,15 @@ WT_CLI_PASSO1  =
 		null AUGBL, 
 		null AUGDT,
 		null DATA_PAREGGIO
-		from :WT_CLI_PASSO1 a
+		from :WT_CLI_RESI_PASSO1 a
 		join :M_CHIAVE_CONTABILE c
 		on (a.BSCHL=c.BSCHL)
 		where c.DESTINAZIONE='Cliente'
-		and c.TIPO_CHIAVE='Pagamenti'
-		and a.STATUS=1
-		union
-		select 
+		and c.TIPO_CHIAVE='Fatture'
+		and c.TIPO = 'avere'
+		and a.STATUS=1)
+	union
+		(select 
 		BUKRS, GJAHR, BELNR, BUZEI, "ROWID",
 		KUNNR,
 		BSCHL,
@@ -321,7 +258,7 @@ WT_CLI_PASSO1  =
 		from
 		(
 			select 
-			b.BUKRS, b.GJAHR, b.BELNR, b.BUZEI, ROW_NUMBER() over (partition by NUMROW_FATTURA order by a.NUMROW_PAGAMENTO) +d.MAXROWID "ROWID",
+			b.BUKRS, b.GJAHR, b.BELNR, b.BUZEI, ROW_NUMBER() over (partition by NUMROW_FATTURA order by a.NUMROW_PAGAMENTO) +d.MAX_ROWID "ROWID",
 			b.KUNNR,
 			b.BSCHL,
 			b.BLDAT, b.NETDT,
@@ -360,63 +297,64 @@ WT_CLI_PASSO1  =
 			c.BLDAT DATA_PAREGGIO
 			--into WT_CLI_PASSO2
 			from :TMP_Passo2_P4 a
-			join :TMP_Passo2_Fatture b
+			inner join :TMP_Passo2_Fatture b
 			on (a.BUKRS=b.BUKRS and a.AUGBL=b.AUGBL and a.AUGDT=b.AUGDT and a.KUNNR=b.KUNNR and a.NUMROW_FATTURA=b."ROWID")
-			join :TMP_Passo2_Pagamenti c
+			inner join :TMP_Passo2_Resi c
 			on (a.BUKRS=c.BUKRS and a.AUGBL=c.AUGBL and a.AUGDT=c.AUGDT and a.KUNNR=c.KUNNR and a.NUMROW_PAGAMENTO=c."ROWID")
 			join :Temp_Fatture d
 			on (b.BUKRS=d.BUKRS and b.GJAHR=d.GJAHR and b.BELNR=d.BELNR and b.BUZEI=d.BUZEI)
 			--order by 1,2,3,4,5
 		) a
+	)
 	;
 
 
-	return(
-		select 
-		a.BUKRS, a.GJAHR, a.BELNR, a.BUZEI, a."ROWID", 
-		a.KUNNR,
-		a.BSCHL,
-		case
-			when a.DMSHB=abs(VAL_PAGATO_ALLOCATO) then 1 --Fatture totalmente elise dai documenti di pareggio
-			when "ROWID">1 then 1 --Righe fatture fittizie generate con il passo2
-			else 0
-		end STATUS, 
-		a.BLDAT, a.NETDT,
-		case when a."ROWID"=1 then a.DMSHB else 0 end DMSHB,
-		case when a."ROWID"=1 then a.WRSHB else 0 end WRSHB,
-		case when a."ROWID"=1 then b.VAL_PAGATO_ALLOCATO else null end VAL_PAGATO_ALLOCATO,
-		a.VAL_PAGATO_ALLOCATO_GMP, 
-		case when a."ROWID"=1 then b.VAL_PAGATO_ALLOCATO_LC else null end VAL_PAGATO_ALLOCATO_LC,
-		a.VAL_PAGATO_ALLOCATO_GMP_LC, 
-		a.DATA_PAGAMENTO, 
-		a.ESERCIZIO_PAGAMENTO,
-		a.DOCUMENTO_PAGAMENTO,
-		a.NUM_RIGA_PAGAMENTO,
-		a.AUGBL,
-		a.AUGDT,
-		b.DATA_PAREGGIO
-		--into #WT_CLI_PASSO2
-		from :TMP_Passo2_P5 a
-		left join
-		(
-			select BUKRS, GJAHR, BELNR, BUZEI, a.BSCHL, b.TIPO_CHIAVE,
-			case 
-				when b.TIPO_CHIAVE='Fatture' then sum(VAL_PAGATO_ALLOCATO_GMP) 
-				else -1*sum(a.DMSHB)
-			end VAL_PAGATO_ALLOCATO, 
-			case 
-				when b.TIPO_CHIAVE='Fatture' then sum(VAL_PAGATO_ALLOCATO_GMP_LC) 
-				else -1*sum(a.WRSHB)
-			end VAL_PAGATO_ALLOCATO_LC, 
-			max(DATA_PAREGGIO) DATA_PAREGGIO
-			From :TMP_Passo2_P5 a
-			join :M_CHIAVE_CONTABILE b
-			on (a.BSCHL=b.BSCHL)
-			group by BUKRS, GJAHR, BELNR, BUZEI, a.BSCHL, b.TIPO_CHIAVE
-		) b
-		on (a.BUKRS=b.BUKRS and a.GJAHR=b.GJAHR and a.BELNR=b.BELNR and a.BUZEI=b.BUZEI and a.BSCHL=b.BSCHL)
-		union
-		--Fatture non ancora elaborate, perchè non hanno pagamenti associati
+	var_out = 
+	(select 
+	a.BUKRS, a.GJAHR, a.BELNR, a.BUZEI, a."ROWID", 
+	a.KUNNR,
+	a.BSCHL,
+	case
+		when a.DMSHB=abs(VAL_PAGATO_ALLOCATO) then 1 --Fatture totalmente elise dai documenti di pareggio
+		when "ROWID">1 then 1 --Righe fatture fittizie generate con il passo2
+		else 0
+	end STATUS, 
+	a.BLDAT, a.NETDT,
+	case when a."ROWID"=1 then a.DMSHB else 0 end DMSHB,
+	case when a."ROWID"=1 then a.WRSHB else 0 end WRSHB,
+	case when a."ROWID"=1 then b.VAL_PAGATO_ALLOCATO else null end VAL_PAGATO_ALLOCATO,
+	a.VAL_PAGATO_ALLOCATO_GMP, 
+	case when a."ROWID"=1 then b.VAL_PAGATO_ALLOCATO_LC else null end VAL_PAGATO_ALLOCATO_LC,
+	a.VAL_PAGATO_ALLOCATO_GMP_LC, 
+	a.DATA_PAGAMENTO, 
+	a.ESERCIZIO_PAGAMENTO,
+	a.DOCUMENTO_PAGAMENTO,
+	a.NUM_RIGA_PAGAMENTO,
+	a.AUGBL,
+	a.AUGDT,
+	b.DATA_PAREGGIO
+	--into #WT_CLI_PASSO2
+	from :TMP_Passo2_P5 a
+	left join
+	(
+		select BUKRS, GJAHR, BELNR, BUZEI, a.BSCHL, b.TIPO_CHIAVE,
+		case 
+			when b.TIPO_CHIAVE='Fatture' and b.TIPO = 'dare' then sum(VAL_PAGATO_ALLOCATO_GMP) 
+			else -1*sum(a.DMSHB)
+		end VAL_PAGATO_ALLOCATO, 
+		case 
+			when b.TIPO_CHIAVE='Fatture' and b.TIPO = 'dare' then sum(VAL_PAGATO_ALLOCATO_GMP_LC) 
+			else -1*sum(a.WRSHB)
+		end VAL_PAGATO_ALLOCATO_LC, 
+		max(DATA_PAREGGIO) DATA_PAREGGIO
+		From :TMP_Passo2_P5 a
+		join :M_CHIAVE_CONTABILE b
+		on (a.BSCHL=b.BSCHL)
+		group by BUKRS, GJAHR, BELNR, BUZEI, a.BSCHL, b.TIPO_CHIAVE, b.TIPO
+	) b
+	on (a.BUKRS=b.BUKRS and a.GJAHR=b.GJAHR and a.BELNR=b.BELNR and a.BUZEI=b.BUZEI and a.BSCHL=b.BSCHL)
+	union
+	--Fatture non ancora elaborate, perchè non hanno pagamenti associati
 		select a.BUKRS, a.GJAHR, a.BELNR, a.BUZEI, 1 "ROWID", 
 		a.KUNNR,
 		a.BSCHL,
@@ -436,19 +374,15 @@ WT_CLI_PASSO1  =
 		a.AUGBL, --Vengono considerate anche le partite pareggiate ma che non si chiudono a causa di insoluti e resi in fattura
 		a.AUGDT, --Vengono considerate anche le partite pareggiate ma che non si chiudono a causa di insoluti e resi in fattura
 		null DATA_PAREGGIO
-		from :WT_CLI_PASSO1 a
+		from :WT_CLI_RESI_PASSO1 a
 		join :M_CHIAVE_CONTABILE c
 		on (a.BSCHL=c.BSCHL)
 		left join :TMP_Passo2_P5 d
 		on (a.BUKRS=d.BUKRS and a.GJAHR=d.GJAHR and a.BELNR=d.BELNR and a.BUZEI=d.BUZEI)
-		left join :TMP_Passo2_Fatture_Elise e
-		on (a.BUKRS=e.BUKRS and a.GJAHR=e.GJAHR and a.BELNR=e.BELNR and a.BUZEI=e.BUZEI)
 		where c.DESTINAZIONE='Cliente'
 		and c.TIPO_CHIAVE='Fatture'
+		and c.TIPO = 'dare'
 		and d.BUKRS is null
-		and e.BUKRS is null)
-	;
-	
-	
+	);
  
 END;

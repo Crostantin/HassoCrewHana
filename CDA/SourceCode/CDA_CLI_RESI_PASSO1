@@ -1,0 +1,178 @@
+USE [CDA_DW]
+GO
+
+/****** Object:  UserDefinedFunction [dbo].[CDA_CLI_RESI_PASSO1]    Script Date: 13/05/2016 10:27:52 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+
+ALTER function [dbo].[CDA_CLI_RESI_PASSO1]()
+RETURNS @WT_CLI_RESI_PASSO1 TABLE
+ (
+	BUKRS varchar(4) NOT NULL,
+	GJAHR decimal(4, 0) NULL,
+	BELNR varchar(10) NOT NULL,
+	BUZEI decimal(3, 0) NOT NULL,
+	BSCHL varchar(2) NULL,
+	AUGBL varchar(10) NULL,
+	AUGDT date NULL,
+	KUNNR varchar(10) NULL,
+	BLDAT date NULL,
+	NETDT date NULL,
+	STATUS int NOT NULL,
+	DMSHB decimal(13, 2) NULL,
+	WRSHB decimal(13, 2) NULL,
+	ROWID bigint NULL,
+	VAL_PAGATO_ALLOCATO decimal(38, 2) NULL,
+	VAL_PAGATO_ALLOCATO_GMP decimal(13, 2) NULL,
+	VAL_PAGATO_ALLOCATO_LC decimal(38, 2) NULL,
+	VAL_PAGATO_ALLOCATO_GMP_LC decimal(13, 2) NULL,
+	DATA_PAGAMENTO date NULL,
+	ESERCIZIO_PAGAMENTO decimal(4, 0) NULL,
+	DOCUMENTO_PAGAMENTO varchar(10) NULL,
+	NUM_RIGA_PAGAMENTO decimal(3, 0) NULL
+)
+as
+begin
+
+	declare @TMP_GMP_CLI_RESI_PASSO1 TABLE
+	 (
+		BUKRS varchar(4) NOT NULL,
+		GJAHR decimal(4, 0) NULL,
+		BELNR varchar(10) NOT NULL,
+		BUZEI decimal(3, 0) NOT NULL,
+		ROWID int, 
+		KUNNR varchar(10) NULL,
+		BLDAT date NULL,
+		NETDT date NULL,
+		DMSHB decimal(13, 2) NULL,
+		WRSHB decimal(13, 2) NULL,
+		VAL_PAGATO_ALLOCATO_GMP decimal(13, 2) NULL,
+		VAL_PAGATO_ALLOCATO_GMP_LC decimal(13, 2) NULL,
+		DATA_PAGAMENTO date NULL,
+		ESERCIZIO_PAGAMENTO decimal(4, 0) NULL,
+		DOCUMENTO_PAGAMENTO varchar(10) NULL,
+		NUM_RIGA_PAGAMENTO decimal(3, 0) NULL
+	)
+
+	declare @TMP_GMP_CLI_RESI_PASSO2 TABLE
+	(
+		BUKRS varchar(4) NOT NULL,
+		GJAHR decimal(4, 0) NULL,
+		BELNR varchar(10) NOT NULL,
+		BUZEI decimal(3, 0) NOT NULL,
+		ROWID int,
+		KUNNR varchar(10) NULL,
+		BLDAT date NULL,
+		NETDT date NULL,
+		DMSHB decimal(13, 2) NULL,
+		WRSHB decimal(13, 2) NULL,
+		VAL_PAGATO_ALLOCATO decimal(38, 2) NULL,
+		VAL_PAGATO_ALLOCATO_GMP decimal(13, 2) NULL,
+		VAL_PAGATO_ALLOCATO_LC decimal(38, 2) NULL,
+		VAL_PAGATO_ALLOCATO_GMP_LC decimal(13, 2) NULL,
+		DATA_PAGAMENTO date NULL,
+		ESERCIZIO_PAGAMENTO decimal(4, 0) NULL,
+		DOCUMENTO_PAGAMENTO varchar(10) NULL,
+		NUM_RIGA_PAGAMENTO decimal(3, 0) NULL
+	)
+
+	insert into @TMP_GMP_CLI_RESI_PASSO1
+	--Passo 1
+	--Si i pagamenti relativi a fatture secche
+	select a.BUKRS, a.GJAHR, a.BELNR, a.BUZEI, ROW_NUMBER() OVER ( PARTITION BY a.BUKRS, a.GJAHR, a.BELNR, a.BUZEI order by b.BLDAT) ROWID, 
+	a.KUNNR, a.BLDAT, a.NETDT,
+	a.DMSHB, a.WRSHB,
+	b.DMSHB VAL_PAGATO_ALLOCATO_GMP, b.WRSHB VAL_PAGATO_ALLOCATO_GMP_LC, b.BLDAT DATA_PAGAMENTO,
+	b.REBZJ ESERCIZIO_PAGAMENTO, 
+	b.REBZG DOCUMENTO_PAGAMENTO, 
+	b.REBZZ NUM_RIGA_PAGAMENTO
+	--into TMP_GMP_CLI_PASSO1
+	from T_0FI_AR_4 a
+	join 
+	(
+		--Consieriamo come Pagamenti i resi in Fattura
+		select  BUKRS, REBZG, REBZJ, REBZZ, DMSHB, WRSHB, BLDAT
+		FROM dbo.T_0FI_AR_4 a
+		join dbo.M_CHIAVE_CONTABILE b
+		on (a.BSCHL=b.BSCHL)
+		where b.DESTINAZIONE='Cliente'
+		and b.TIPO_CHIAVE='Fatture'
+		and b.TIPO = 'avere'
+		--Condizione da imputare
+		and REBZJ<>0
+	) b
+	on (a.BUKRS=b.BUKRS and a.GJAHR=b.REBZJ and a.BELNR=b.REBZG and a.BUZEI=b.REBZZ)
+
+
+	--Passo1 Bis:
+	--creo la colonna Pagato Allocato
+	insert @TMP_GMP_CLI_RESI_PASSO2
+	select 
+	a.BUKRS, a.GJAHR, a.BELNR, a.BUZEI, ROWID, 
+	a.KUNNR, a.BLDAT, a.NETDT,
+	a.DMSHB, a.WRSHB,
+	case when ROWID=1 then b.VAL_PAGATO_ALLOCATO else null end VAL_PAGATO_ALLOCATO,
+	VAL_PAGATO_ALLOCATO_GMP, 
+	case when ROWID=1 then b.VAL_PAGATO_ALLOCATO_LC else null end VAL_PAGATO_ALLOCATO_LC,
+	VAL_PAGATO_ALLOCATO_GMP_LC, DATA_PAGAMENTO,
+	ESERCIZIO_PAGAMENTO, 
+	DOCUMENTO_PAGAMENTO, 
+	NUM_RIGA_PAGAMENTO
+	--into #TMP_GMP_CLI_PASSO2
+	from @TMP_GMP_CLI_RESI_PASSO1 a
+	join
+	(
+		select a.BUKRS, a.GJAHR, a.BELNR, a.BUZEI, sum(VAL_PAGATO_ALLOCATO_GMP) VAL_PAGATO_ALLOCATO, sum(VAL_PAGATO_ALLOCATO_GMP_LC) VAL_PAGATO_ALLOCATO_LC
+		From @TMP_GMP_CLI_RESI_PASSO1 a
+		group by  a.BUKRS, a.GJAHR, a.BELNR, a.BUZEI
+	) b
+	on (a.BUKRS=b.BUKRS and a.GJAHR=b.GJAHR and a.BELNR=b.BELNR and a.BUZEI=b.BUZEI)
+
+
+	--truncate table [dbo].[WT_CLI_PASSO1]
+
+	--Creo la WT dedicata al passo1:
+
+	insert into @WT_CLI_RESI_PASSO1
+	select 
+	a.BUKRS, a.GJAHR, a.BELNR, a.BUZEI, a.BSCHL, a.AUGBL, a.AUGDT, a.KUNNR, a.BLDAT, a.NETDT,
+	case
+		when REBZJ<>0 AND c.DESTINAZIONE='Cliente' and c.TIPO_CHIAVE='Fatture' and c.TIPO = 'avere' then 1 --Resi associati a Fatture dirette
+		when a.DMSHB=VAL_PAGATO_ALLOCATO_GMP then 1 --Fatture totalmente elise dai pagamenti diretti
+		when rowid>1 then 1 --Righe fatture fittizie generate con il passo1
+		else 0
+	end STATUS, 
+	a.DMSHB, a.WRSHB, b.ROWID, 
+	case
+		when REBZJ<>0 AND c.DESTINAZIONE='Cliente' and c.TIPO_CHIAVE='Fatture' and c.TIPO = 'avere' then -1*a.DMSHB
+		else b.VAL_PAGATO_ALLOCATO
+	end VAL_PAGATO_ALLOCATO, 
+	b.VAL_PAGATO_ALLOCATO_GMP, 
+	case
+		when REBZJ<>0 AND c.DESTINAZIONE='Cliente' and c.TIPO_CHIAVE='Fatture' and c.TIPO = 'avere' then -1*a.WRSHB
+		else b.VAL_PAGATO_ALLOCATO_LC
+	end VAL_PAGATO_ALLOCATO_LC,
+	b.VAL_PAGATO_ALLOCATO_GMP_LC, 
+	b.DATA_PAGAMENTO,
+	b.ESERCIZIO_PAGAMENTO, 
+	b.DOCUMENTO_PAGAMENTO, 
+	b.NUM_RIGA_PAGAMENTO
+	--into [dbo].[WT_CLI_PASSO1]
+	from T_0FI_AR_4 a
+	left join @TMP_GMP_CLI_RESI_PASSO2 b
+	on (a.BUKRS=b.BUKRS and a.GJAHR=b.GJAHR and a.BELNR=b.BELNR and a.BUZEI=b.BUZEI)
+	JOIN M_CHIAVE_CONTABILE c
+	on (a.BSCHL=c.BSCHL)
+
+	return
+end
+
+
+GO
+
+
