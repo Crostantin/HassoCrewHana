@@ -31,9 +31,8 @@ BEGIN
 	Write your function logic
  *****************************/
 
- M_CHIAVE_CONTABILE = select * from "HT"."M_CHIAVE_CONTABILE";
- T_0FI_AR_4 = select * from "CDA_TMP"."T_0FI_AR_4"
-  WHERE KUNNR IN ('0002003048');
+ M_CHIAVE_CONTABILE = select * from "CDA_TMP"."M_CHIAVE_CONTABILE";
+ T_0FI_AR_4 = select * from "CDA_TMP"."T_0FI_AR_4";
  
 --Seleziono i pagamenti relativi a fatture secche
  TMP_GMP_CLI_RESI_PASSO1 =

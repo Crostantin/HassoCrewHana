@@ -9,13 +9,13 @@
     <calculationView xsi:type="Calculation:SqlScriptView" id="Script_View">
       <descriptions/>
       <viewAttributes>
-        <viewAttribute datatype="VARCHAR" id="BUKRS" length="4"/>
+        <viewAttribute datatype="NVARCHAR" id="BUKRS" length="4"/>
         <viewAttribute datatype="DECIMAL" id="GJAHR" length="4" scale="0"/>
-        <viewAttribute datatype="VARCHAR" id="BELNR" length="10"/>
+        <viewAttribute datatype="NVARCHAR" id="BELNR" length="10"/>
         <viewAttribute datatype="DECIMAL" id="BUZEI" length="3" scale="0"/>
-        <viewAttribute datatype="DECIMAL" id="ROWID" length="19" scale="0"/>
-        <viewAttribute datatype="VARCHAR" id="KUNNR" length="10"/>
-        <viewAttribute datatype="VARCHAR" id="BSCHL" length="2"/>
+        <viewAttribute datatype="BIGINT" id="ROWID"/>
+        <viewAttribute datatype="NVARCHAR" id="KUNNR" length="10"/>
+        <viewAttribute datatype="NVARCHAR" id="BSCHL" length="2"/>
         <viewAttribute datatype="INTEGER" id="STATUS"/>
         <viewAttribute datatype="DATE" id="BLDAT"/>
         <viewAttribute datatype="DATE" id="NETDT"/>
@@ -27,9 +27,9 @@
         <viewAttribute datatype="DECIMAL" id="VAL_PAGATO_ALLOCATO_GMP_LC" length="38" scale="2"/>
         <viewAttribute datatype="DATE" id="DATA_PAGAMENTO"/>
         <viewAttribute datatype="DECIMAL" id="ESERCIZIO_PAGAMENTO" length="4" scale="0"/>
-        <viewAttribute datatype="VARCHAR" id="DOCUMENTO_PAGAMENTO" length="10"/>
+        <viewAttribute datatype="NVARCHAR" id="DOCUMENTO_PAGAMENTO" length="10"/>
         <viewAttribute datatype="DECIMAL" id="NUM_RIGA_PAGAMENTO" length="3" scale="0"/>
-        <viewAttribute datatype="VARCHAR" id="AUGBL" length="10"/>
+        <viewAttribute datatype="NVARCHAR" id="AUGBL" length="10"/>
         <viewAttribute datatype="DATE" id="AUGDT"/>
         <viewAttribute datatype="DATE" id="DATA_PAREGGIO"/>
       </viewAttributes>
@@ -45,36 +45,47 @@ WT_CLI_PASSO1  = select * from &quot;CDA_TMP&quot;.&quot;HASSO_CREW.CDA.Porting.
 M_CHIAVE_CONTABILE = select * from &quot;CDA_TMP&quot;.&quot;M_CHIAVE_CONTABILE&quot;;
 WT_CLI_RESI_PASSO2 = 
 	 SELECT
-		 &quot;BUKRS&quot;,
-		 &quot;BELNR&quot;,
-		 &quot;KUNNR&quot;,
-		 &quot;BSCHL&quot;,
-		 &quot;DOCUMENTO_PAGAMENTO&quot;,
-		 &quot;AUGBL&quot;,
-		 sum(&quot;GJAHR&quot;) AS &quot;GJAHR&quot;,
-		 sum(&quot;BUZEI&quot;) AS &quot;BUZEI&quot;,
-		 sum(&quot;ROWID&quot;) AS &quot;ROWID&quot;,
-		 sum(&quot;STATUS&quot;) AS &quot;STATUS&quot;,
-		 min(&quot;BLDAT&quot;) AS &quot;BLDAT&quot;,
-		 min(&quot;NETDT&quot;) AS &quot;NETDT&quot;,
-		 sum(&quot;DMSHB&quot;) AS &quot;DMSHB&quot;,
-		 sum(&quot;WRSHB&quot;) AS &quot;WRSHB&quot;,
-		 sum(&quot;VAL_PAGATO_ALLOCATO&quot;) AS &quot;VAL_PAGATO_ALLOCATO&quot;,
-		 sum(&quot;VAL_PAGATO_ALLOCATO_GMP&quot;) AS &quot;VAL_PAGATO_ALLOCATO_GMP&quot;,
-		 sum(&quot;VAL_PAGATO_ALLOCATO_LC&quot;) AS &quot;VAL_PAGATO_ALLOCATO_LC&quot;,
-		 sum(&quot;VAL_PAGATO_ALLOCATO_GMP_LC&quot;) AS &quot;VAL_PAGATO_ALLOCATO_GMP_LC&quot;,
-		 min(&quot;DATA_PAGAMENTO&quot;) AS &quot;DATA_PAGAMENTO&quot;,
-		 sum(&quot;ESERCIZIO_PAGAMENTO&quot;) AS &quot;ESERCIZIO_PAGAMENTO&quot;,
-		 sum(&quot;NUM_RIGA_PAGAMENTO&quot;) AS &quot;NUM_RIGA_PAGAMENTO&quot;,
-		 min(&quot;AUGDT&quot;) AS &quot;AUGDT&quot;,
-		 min(&quot;DATA_PAREGGIO&quot;) AS &quot;DATA_PAREGGIO&quot; 
-	FROM &quot;_SYS_BIC&quot;.&quot;HASSO_CREW.CDA.Porting.Views/CA_CDA_CLI_RESI_PASSO2&quot; 
-	GROUP BY &quot;BUKRS&quot;,
-		 &quot;BELNR&quot;,
-		 &quot;KUNNR&quot;,
-		 &quot;BSCHL&quot;,
-		 &quot;DOCUMENTO_PAGAMENTO&quot;,
-		 &quot;AUGBL&quot;
+	 &quot;BUKRS&quot;,
+	 &quot;GJAHR&quot;,
+	 &quot;BELNR&quot;,
+	 &quot;BUZEI&quot;,
+	 &quot;ROWID&quot;,
+	 &quot;KUNNR&quot;,
+	 &quot;BSCHL&quot;,
+	 &quot;STATUS&quot;,
+	 &quot;BLDAT&quot;,
+	 &quot;NETDT&quot;,
+	 &quot;DATA_PAGAMENTO&quot;,
+	 &quot;ESERCIZIO_PAGAMENTO&quot;,
+	 &quot;DOCUMENTO_PAGAMENTO&quot;,
+	 &quot;NUM_RIGA_PAGAMENTO&quot;,
+	 &quot;AUGBL&quot;,
+	 &quot;AUGDT&quot;,
+	 &quot;DATA_PAREGGIO&quot;,
+	 sum(&quot;DMSHB&quot;) AS &quot;DMSHB&quot;,
+	 sum(&quot;WRSHB&quot;) AS &quot;WRSHB&quot;,
+	 sum(&quot;VAL_PAGATO_ALLOCATO&quot;) AS &quot;VAL_PAGATO_ALLOCATO&quot;,
+	 sum(&quot;VAL_PAGATO_ALLOCATO_GMP&quot;) AS &quot;VAL_PAGATO_ALLOCATO_GMP&quot;,
+	 sum(&quot;VAL_PAGATO_ALLOCATO_LC&quot;) AS &quot;VAL_PAGATO_ALLOCATO_LC&quot;,
+	 sum(&quot;VAL_PAGATO_ALLOCATO_GMP_LC&quot;) AS &quot;VAL_PAGATO_ALLOCATO_GMP_LC&quot; 
+FROM &quot;_SYS_BIC&quot;.&quot;HASSO_CREW.CDA.Porting.Views/CA_CDA_CLI_RESI_PASSO2&quot; 
+GROUP BY &quot;BUKRS&quot;,
+	 &quot;GJAHR&quot;,
+	 &quot;BELNR&quot;,
+	 &quot;BUZEI&quot;,
+	 &quot;ROWID&quot;,
+	 &quot;KUNNR&quot;,
+	 &quot;BSCHL&quot;,
+	 &quot;STATUS&quot;,
+	 &quot;BLDAT&quot;,
+	 &quot;NETDT&quot;,
+	 &quot;DATA_PAGAMENTO&quot;,
+	 &quot;ESERCIZIO_PAGAMENTO&quot;,
+	 &quot;DOCUMENTO_PAGAMENTO&quot;,
+	 &quot;NUM_RIGA_PAGAMENTO&quot;,
+	 &quot;AUGBL&quot;,
+	 &quot;AUGDT&quot;,
+	 &quot;DATA_PAREGGIO&quot;
 ;
 
 	--Passo2.1: gestisco le runningsum delle fatture e dei pagamenti
@@ -489,9 +500,21 @@ END /********* End Procedure Script ************/
         <descriptions/>
         <keyMapping columnObjectName="Script_View" columnName="BUKRS"/>
       </attribute>
+      <attribute id="GJAHR" order="2">
+        <descriptions/>
+        <keyMapping columnObjectName="Script_View" columnName="GJAHR"/>
+      </attribute>
       <attribute id="BELNR" order="3">
         <descriptions/>
         <keyMapping columnObjectName="Script_View" columnName="BELNR"/>
+      </attribute>
+      <attribute id="BUZEI" order="4">
+        <descriptions/>
+        <keyMapping columnObjectName="Script_View" columnName="BUZEI"/>
+      </attribute>
+      <attribute id="ROWID" order="5">
+        <descriptions/>
+        <keyMapping columnObjectName="Script_View" columnName="ROWID"/>
       </attribute>
       <attribute id="KUNNR" order="6">
         <descriptions/>
@@ -501,13 +524,45 @@ END /********* End Procedure Script ************/
         <descriptions/>
         <keyMapping columnObjectName="Script_View" columnName="BSCHL"/>
       </attribute>
+      <attribute id="STATUS" order="8">
+        <descriptions/>
+        <keyMapping columnObjectName="Script_View" columnName="STATUS"/>
+      </attribute>
+      <attribute id="BLDAT" order="9">
+        <descriptions/>
+        <keyMapping columnObjectName="Script_View" columnName="BLDAT"/>
+      </attribute>
+      <attribute id="NETDT" order="10">
+        <descriptions/>
+        <keyMapping columnObjectName="Script_View" columnName="NETDT"/>
+      </attribute>
+      <attribute id="DATA_PAGAMENTO" order="17">
+        <descriptions/>
+        <keyMapping columnObjectName="Script_View" columnName="DATA_PAGAMENTO"/>
+      </attribute>
+      <attribute id="ESERCIZIO_PAGAMENTO" order="18">
+        <descriptions/>
+        <keyMapping columnObjectName="Script_View" columnName="ESERCIZIO_PAGAMENTO"/>
+      </attribute>
       <attribute id="DOCUMENTO_PAGAMENTO" order="19">
         <descriptions/>
         <keyMapping columnObjectName="Script_View" columnName="DOCUMENTO_PAGAMENTO"/>
       </attribute>
+      <attribute id="NUM_RIGA_PAGAMENTO" order="20">
+        <descriptions/>
+        <keyMapping columnObjectName="Script_View" columnName="NUM_RIGA_PAGAMENTO"/>
+      </attribute>
       <attribute id="AUGBL" order="21">
         <descriptions/>
         <keyMapping columnObjectName="Script_View" columnName="AUGBL"/>
+      </attribute>
+      <attribute id="AUGDT" order="22">
+        <descriptions/>
+        <keyMapping columnObjectName="Script_View" columnName="AUGDT"/>
+      </attribute>
+      <attribute id="DATA_PAREGGIO" order="23">
+        <descriptions/>
+        <keyMapping columnObjectName="Script_View" columnName="DATA_PAREGGIO"/>
       </attribute>
     </attributes>
     <calculatedAttributes/>
@@ -519,30 +574,6 @@ END /********* End Procedure Script ************/
       </layout>
     </privateDataFoundation>
     <baseMeasures>
-      <measure id="GJAHR" order="2" aggregationType="sum" measureType="simple">
-        <descriptions/>
-        <measureMapping columnObjectName="Script_View" columnName="GJAHR"/>
-      </measure>
-      <measure id="BUZEI" order="4" aggregationType="sum" measureType="simple">
-        <descriptions/>
-        <measureMapping columnObjectName="Script_View" columnName="BUZEI"/>
-      </measure>
-      <measure id="ROWID" order="5" aggregationType="sum" measureType="simple">
-        <descriptions/>
-        <measureMapping columnObjectName="Script_View" columnName="ROWID"/>
-      </measure>
-      <measure id="STATUS" order="8" aggregationType="sum" measureType="simple">
-        <descriptions/>
-        <measureMapping columnObjectName="Script_View" columnName="STATUS"/>
-      </measure>
-      <measure id="BLDAT" order="9" aggregationType="min" measureType="simple">
-        <descriptions/>
-        <measureMapping columnObjectName="Script_View" columnName="BLDAT"/>
-      </measure>
-      <measure id="NETDT" order="10" aggregationType="min" measureType="simple">
-        <descriptions/>
-        <measureMapping columnObjectName="Script_View" columnName="NETDT"/>
-      </measure>
       <measure id="DMSHB" order="11" aggregationType="sum" measureType="simple">
         <descriptions/>
         <measureMapping columnObjectName="Script_View" columnName="DMSHB"/>
@@ -566,26 +597,6 @@ END /********* End Procedure Script ************/
       <measure id="VAL_PAGATO_ALLOCATO_GMP_LC" order="16" aggregationType="sum" measureType="simple">
         <descriptions/>
         <measureMapping columnObjectName="Script_View" columnName="VAL_PAGATO_ALLOCATO_GMP_LC"/>
-      </measure>
-      <measure id="DATA_PAGAMENTO" order="17" aggregationType="min" measureType="simple">
-        <descriptions/>
-        <measureMapping columnObjectName="Script_View" columnName="DATA_PAGAMENTO"/>
-      </measure>
-      <measure id="ESERCIZIO_PAGAMENTO" order="18" aggregationType="sum" measureType="simple">
-        <descriptions/>
-        <measureMapping columnObjectName="Script_View" columnName="ESERCIZIO_PAGAMENTO"/>
-      </measure>
-      <measure id="NUM_RIGA_PAGAMENTO" order="20" aggregationType="sum" measureType="simple">
-        <descriptions/>
-        <measureMapping columnObjectName="Script_View" columnName="NUM_RIGA_PAGAMENTO"/>
-      </measure>
-      <measure id="AUGDT" order="22" aggregationType="min" measureType="simple">
-        <descriptions/>
-        <measureMapping columnObjectName="Script_View" columnName="AUGDT"/>
-      </measure>
-      <measure id="DATA_PAREGGIO" order="23" aggregationType="min" measureType="simple">
-        <descriptions/>
-        <measureMapping columnObjectName="Script_View" columnName="DATA_PAREGGIO"/>
       </measure>
     </baseMeasures>
     <calculatedMeasures/>

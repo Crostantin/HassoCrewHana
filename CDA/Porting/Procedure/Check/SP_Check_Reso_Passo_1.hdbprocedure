@@ -10,7 +10,7 @@ BEGIN
  
  M_CHIAVE_CONTABILE = select * from "HT"."M_CHIAVE_CONTABILE";
  T_0FI_AR_4 = select * from "CDA_TMP"."T_0FI_AR_4"
--- WHERE KUNNR IN ('0002003048')--,'0002003048')0002009432
+ --where BELNR = '0099000063' 
  ;
  
 --Seleziono i pagamenti relativi a fatture secche
@@ -98,6 +98,10 @@ BEGIN
 		on (a.BUKRS=b.BUKRS and a.GJAHR=b.GJAHR and a.BELNR=b.BELNR and a.BUZEI=b.BUZEI)
 		inner join :M_CHIAVE_CONTABILE c
 		on (a.BSCHL=c.BSCHL)
-	;
+
+ 		--where a.BELNR = '0099000063' 
+ ;
+ 
+	
  
 END;

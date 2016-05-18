@@ -1,0 +1,11 @@
+{
+  "description": "Job to Update MY_TABLE values",
+  "action": "HASSO_CREW.CDA.Porting.XS_Job_Learning:XS_Source_File.xsjs::My_table",
+  "schedules":
+  [
+  {
+  "description": "Table will update after every 59 sec",
+  "xscron": "* * * * * * 59"
+  }
+  ]
+}

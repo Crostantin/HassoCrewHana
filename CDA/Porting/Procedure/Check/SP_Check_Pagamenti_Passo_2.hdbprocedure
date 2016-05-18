@@ -1,0 +1,466 @@
+PROCEDURE "CDA_TMP"."HASSO_CREW.CDA.Porting.Procedure.Check::SP_Check_Pagamenti_Passo_2" ( ) 
+	LANGUAGE SQLSCRIPT
+	SQL SECURITY INVOKER 
+	DEFAULT SCHEMA "CDA_TMP"
+	READS SQL DATA AS 
+
+ BEGIN 
+ /********* Begin Procedure Script ************/ 
+ --BEGIN
+ /***************************** 
+	Write your function logic
+ *****************************/
+
+WT_CLI_PASSO1  = select * from "CDA_TMP"."HASSO_CREW.CDA.Porting.Functions::TB_CDA_CLI_PAGAMENTI_PASSO1"() where BELNR = '0100054690';
+M_CHIAVE_CONTABILE = select * from "CDA_TMP"."M_CHIAVE_CONTABILE";
+WT_CLI_RESI_PASSO2 = 
+	 SELECT
+	 "BUKRS",
+	 "GJAHR",
+	 "BELNR",
+	 "BUZEI",
+	 "ROWID",
+	 "KUNNR",
+	 "BSCHL",
+	 "STATUS",
+	 "BLDAT",
+	 "NETDT",
+	 "DATA_PAGAMENTO",
+	 "ESERCIZIO_PAGAMENTO",
+	 "DOCUMENTO_PAGAMENTO",
+	 "NUM_RIGA_PAGAMENTO",
+	 "AUGBL",
+	 "AUGDT",
+	 "DATA_PAREGGIO",
+	 sum("DMSHB") AS "DMSHB",
+	 sum("WRSHB") AS "WRSHB",
+	 sum("VAL_PAGATO_ALLOCATO") AS "VAL_PAGATO_ALLOCATO",
+	 sum("VAL_PAGATO_ALLOCATO_GMP") AS "VAL_PAGATO_ALLOCATO_GMP",
+	 sum("VAL_PAGATO_ALLOCATO_LC") AS "VAL_PAGATO_ALLOCATO_LC",
+	 sum("VAL_PAGATO_ALLOCATO_GMP_LC") AS "VAL_PAGATO_ALLOCATO_GMP_LC" 
+FROM "_SYS_BIC"."HASSO_CREW.CDA.Porting.Views/CA_CDA_CLI_RESI_PASSO2" 
+where BELNR = '0100054690'
+GROUP BY "BUKRS",
+	 "GJAHR",
+	 "BELNR",
+	 "BUZEI",
+	 "ROWID",
+	 "KUNNR",
+	 "BSCHL",
+	 "STATUS",
+	 "BLDAT",
+	 "NETDT",
+	 "DATA_PAGAMENTO",
+	 "ESERCIZIO_PAGAMENTO",
+	 "DOCUMENTO_PAGAMENTO",
+	 "NUM_RIGA_PAGAMENTO",
+	 "AUGBL",
+	 "AUGDT",
+	 "DATA_PAREGGIO"
+;
+
+	--Passo2.1: gestisco le runningsum delle fatture e dei pagamenti
+
+	--Pagamenti
+	TMP_Passo2_Pagamenti =
+		select 
+		ROW_NUMBER() over (order by  a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR, a.BLDAT, a.BELNR, a.BUZEI) "ROWID",
+		a.BSCHL,
+		--Documenti di Pareggio
+		AUGBL, AUGDT, KUNNR, 
+		--Chiave contabile
+		 a.BUKRS, a.GJAHR, a.BELNR, a.BUZEI,
+		 --Valori del pagamento
+		DMSHB VAL_PAGAMENTO, WRSHB VAL_PAGAMENTO_LC, 
+		--Running Sum
+		SUM(A.DMSHB) OVER (PARTITION BY  a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR ORDER BY a.BLDAT, a.BELNR, a.BUZEI) RUNNINGSUM_PAGAMENTO,
+		SUM(A.WRSHB) OVER (PARTITION BY  a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR ORDER BY a.BLDAT, a.BELNR, a.BUZEI) RUNNINGSUM_PAGAMENTO_LC,
+		BLDAT
+		--into :TMP_Passo2_Pagamenti
+		FROM :WT_CLI_PASSO1 a
+		join :M_CHIAVE_CONTABILE b
+		on (a.BSCHL=b.BSCHL)
+		where b.DESTINAZIONE='Cliente'
+		and b.TIPO_CHIAVE='Pagamenti'
+		--Condizione da imputare
+		--and rtrim(ltrim(ifnull(AUGBL, '')))<>''
+		and a.STATUS=0
+	;
+	
+	--Fatture
+	TMP_Passo2_Fatture =
+		select 
+		ROW_NUMBER() over (order by  a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR, a.BLDAT, a.BELNR, a.BUZEI) "ROWID",
+		a.BSCHL,
+		--Documenti di Pareggio
+		AUGBL, AUGDT, KUNNR, 
+		--Chiave contabile
+		a.BUKRS, a.GJAHR, a.BELNR, a.BUZEI,
+		--Valori del pagamento
+		A.DMSHB + ifnull(a.VAL_PAGATO_ALLOCATO, 0) VAL_FATTURA, 
+		A.WRSHB + ifnull(a.VAL_PAGATO_ALLOCATO_LC, 0) VAL_FATTURA_LC,
+		--Running Sum
+		SUM(A.DMSHB + ifnull(a.VAL_PAGATO_ALLOCATO, 0)) OVER (PARTITION BY  a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR ORDER BY a.BLDAT, a.BELNR, a.BUZEI) RUNNINGSUM_FATTURA,
+		SUM(A.WRSHB + ifnull(a.VAL_PAGATO_ALLOCATO_LC, 0)) OVER (PARTITION BY  a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR ORDER BY a.BLDAT, a.BELNR, a.BUZEI) RUNNINGSUM_FATTURA_LC,
+		BLDAT, NETDT
+		--into :TMP_Passo2_Fatture
+		FROM :WT_CLI_PASSO1 a
+		join :M_CHIAVE_CONTABILE b
+		on (a.BSCHL=b.BSCHL)
+		where b.DESTINAZIONE='Cliente'
+		and b.TIPO_CHIAVE='Fatture'
+		--Condizione da imputareand rtrim(ltrim(ifnull(AUGBL, '')))<>''
+		and a.BSCHL not in ('11', '12') -- Eliminiamo le note di credito dal calcolo dei pagamenti
+		and a.STATUS=0
+	;
+	
+	TMP_Partite_Elaborate =
+		(select BUKRS, GJAHR, BELNR, BUZEI, a.BSCHL, AUGBL, AUGDT, KUNNR, BLDAT, NETDT, STATUS, DMSHB, WRSHB, "ROWID", 
+		VAL_PAGATO_ALLOCATO, VAL_PAGATO_ALLOCATO_GMP, VAL_PAGATO_ALLOCATO_LC, VAL_PAGATO_ALLOCATO_GMP_LC, 
+		DATA_PAGAMENTO, ESERCIZIO_PAGAMENTO, DOCUMENTO_PAGAMENTO, NUM_RIGA_PAGAMENTO
+		--into :TMP_Partite_Elaborate
+		FROM :WT_CLI_PASSO1 a
+		join :M_CHIAVE_CONTABILE b
+		on (a.BSCHL=b.BSCHL)
+		where b.DESTINAZIONE='Cliente'
+		and b.TIPO_CHIAVE='Fatture'
+		--Condizione da imputareand rtrim(ltrim(ifnull(AUGBL, '')))<>''
+		and not(a.BSCHL not in ('11', '12') -- Eliminiamo le note di credito dal calcolo dei pagamenti
+		and a.STATUS=0))
+			union all
+		(select BUKRS, GJAHR, BELNR, BUZEI, a.BSCHL, AUGBL, AUGDT, KUNNR, BLDAT, NETDT, STATUS, DMSHB, WRSHB, "ROWID", 
+		VAL_PAGATO_ALLOCATO, VAL_PAGATO_ALLOCATO_GMP, VAL_PAGATO_ALLOCATO_LC, VAL_PAGATO_ALLOCATO_GMP_LC, 
+		DATA_PAGAMENTO, ESERCIZIO_PAGAMENTO, DOCUMENTO_PAGAMENTO, NUM_RIGA_PAGAMENTO
+		FROM :WT_CLI_PASSO1 a
+		join :M_CHIAVE_CONTABILE b
+		on (a.BSCHL=b.BSCHL)
+		where b.DESTINAZIONE='Cliente'
+		and b.TIPO_CHIAVE='Pagamenti'
+		--Condizione da imputare
+		--and rtrim(ltrim(ifnull(AUGBL, '')))<>''
+		and a.STATUS=1 )
+			union all
+		(select BUKRS, GJAHR, BELNR, BUZEI, a.BSCHL, AUGBL, AUGDT, KUNNR, BLDAT, NETDT, STATUS, DMSHB, WRSHB, "ROWID", 
+		VAL_PAGATO_ALLOCATO, VAL_PAGATO_ALLOCATO_GMP, VAL_PAGATO_ALLOCATO_LC, VAL_PAGATO_ALLOCATO_GMP_LC, 
+		DATA_PAGAMENTO, ESERCIZIO_PAGAMENTO, DOCUMENTO_PAGAMENTO, NUM_RIGA_PAGAMENTO
+		from :WT_CLI_RESI_PASSO2 a
+		join :M_CHIAVE_CONTABILE b
+		on (a.BSCHL=b.BSCHL)
+		where b.DESTINAZIONE='Cliente'
+		and b.TIPO_CHIAVE='Fatture'
+		and b.TIPO='avere')
+			union all
+		--Righe con valore di pagato parzialmente allocato
+		(select BUKRS, GJAHR, BELNR, BUZEI, a.BSCHL, AUGBL, AUGDT, KUNNR, BLDAT, NETDT, STATUS, DMSHB, WRSHB, "ROWID", 
+		VAL_PAGATO_ALLOCATO, VAL_PAGATO_ALLOCATO_GMP, VAL_PAGATO_ALLOCATO_LC, VAL_PAGATO_ALLOCATO_GMP_LC, 
+		DATA_PAGAMENTO, ESERCIZIO_PAGAMENTO, DOCUMENTO_PAGAMENTO, NUM_RIGA_PAGAMENTO
+		FROM :WT_CLI_PASSO1 a
+		join :M_CHIAVE_CONTABILE b
+		on (a.BSCHL=b.BSCHL)
+		where b.DESTINAZIONE='Cliente'
+		and b.TIPO_CHIAVE='Fatture'
+		--Condizione da imputareand rtrim(ltrim(ifnull(AUGBL, '')))<>''
+		and a.BSCHL not in ('11', '12') -- Eliminiamo le note di credito dal calcolo dei pagamenti
+		and a.STATUS=0
+		and (a.VAL_PAGATO_ALLOCATO_GMP is not null or a.VAL_PAGATO_ALLOCATO_GMP_LC is not null))
+	;
+
+
+	--seleziono per ogni fattura il minimo running sum di pagamenti che copra il runningsum delle fatture
+
+	--Passo1: seleziono tutte le fatture associate almeno ad un pagamento
+	TMP_Passo2_P0_A = 
+		select 
+		a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR, a."ROWID" NUMROW_FATTURA, min(b."ROWID") NUMROW_PAGAMENTO
+		--into :TMP_Passo2_P0_A
+		from :TMP_Passo2_Fatture a 
+		join :TMP_Passo2_Pagamenti b
+		on (a.AUGBL=b.AUGBL and a.AUGDT=b.AUGDT and a.BUKRS=b.BUKRS and a.KUNNR=b.KUNNR)
+		where RUNNINGSUM_FATTURA<=abs(RUNNINGSUM_PAGAMENTO)
+		group by a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR, a."ROWID"
+		--order by 1 
+	;
+
+	--Passo2: Per tutte le fatture non presenti all'interno dela passo1, seleziono la prima e la associo automaticamente al pagamento maggiore possibile
+		--> viene coperta solo parzialmente, quindi prendo la più vecchia
+	TMP_Passo2_P0 = 
+		(select BUKRS, AUGBL, AUGDT, KUNNR, NUMROW_FATTURA, NUMROW_PAGAMENTO
+		--into :TMP_Passo2_P0
+		from :TMP_Passo2_P0_A)
+		union all
+		select a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR, min(a."ROWID") NUMROW_FATTURA, max(b."ROWID") NUMROW_PAGAMENTO
+		from :TMP_Passo2_Fatture a 
+		join :TMP_Passo2_Pagamenti b
+		on (a.AUGBL=b.AUGBL and a.AUGDT=b.AUGDT and a.BUKRS=b.BUKRS and a.KUNNR=b.KUNNR)
+		left join :TMP_Passo2_P0_A c
+		on (a."ROWID"=c.NUMROW_FATTURA)
+		where c.NUMROW_FATTURA is null
+		group by a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR
+		--order by 1,2
+	;
+
+	----Seleziono per ogni rigafattura, il runningsum del valore precedente
+	TMP_Passo2_P1 = 
+		select a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR, a.NUMROW_FATTURA, a.NUMROW_PAGAMENTO, max(b.NUMROW_FATTURA) FATTURA_LESS1, max(b.NUMROW_PAGAMENTO) PAGAMENTO_LESS1
+		--into :TMP_Passo2_P1
+		From :TMP_Passo2_P0 a
+		left join :TMP_Passo2_P0 b
+		on (a.BUKRS=b.BUKRS and a.AUGBL=b.AUGBL and a.AUGDT=b.AUGDT and a.KUNNR=b.KUNNR and a.NUMROW_FATTURA>b.NUMROW_FATTURA)
+		group by a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR, a.NUMROW_FATTURA, a.NUMROW_PAGAMENTO
+	;
+
+	----Gestisco gli intervalli di pagamento
+	TMP_Passo2_P2 =
+		select ROW_NUMBER() over (order by a.NUMROW_FATTURA, NUMROW_PAGAMENTO) "ROWID", a.*
+		--into :TMP_Passo2_P2
+		from
+		(
+			select a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR, a.NUMROW_FATTURA, ifnull(b."ROWID", c.MINROWID) NUMROW_PAGAMENTO
+			from :TMP_Passo2_P1 a
+			join 
+			(
+				--Per ogni documento di pareggio devo gestire il minimo documento contabile di pagamento (lowerbound)
+				select BUKRS, AUGBL, AUGDT, KUNNR, min ("ROWID") MINROWID
+				from :TMP_Passo2_Pagamenti
+				group by BUKRS, AUGBL, AUGDT, KUNNR
+			) c
+			on (a.BUKRS=c.BUKRS and a.AUGBL=c.AUGBL and a.AUGDT=c.AUGDT and a.KUNNR=c.KUNNR)
+			left join :TMP_Passo2_Pagamenti b
+			on (a.BUKRS=b.BUKRS and a.AUGBL=b.AUGBL and a.AUGDT=b.AUGDT and a.KUNNR=b.KUNNR and b."ROWID" between ifnull(a.PAGAMENTO_LESS1 , c.MINROWID) and a.NUMROW_PAGAMENTO)
+		) a
+	;
+
+	----Seleziono per ogni rigafattura, il runningsum del valore precedente
+	TMP_Passo2_P3 =
+		select a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR, a.NUMROW_FATTURA, a.NUMROW_PAGAMENTO, max(b.NUMROW_FATTURA) FATTURA_LESS1, max(b.NUMROW_PAGAMENTO) PAGAMENTO_LESS1
+		--into :TMP_Passo2_P3
+		From :TMP_Passo2_P2 a
+		left join :TMP_Passo2_P2 b
+		on (a.BUKRS=b.BUKRS and a.AUGBL=b.AUGBL and a.AUGDT=b.AUGDT and a.KUNNR=b.KUNNR AND a."ROWID">b."ROWID")
+		group by a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR, a.NUMROW_FATTURA, a.NUMROW_PAGAMENTO
+	;
+	
+	TMP_Passo2_P4 =
+		select  a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR, a.NUMROW_FATTURA, a.FATTURA_LESS1 NUMROW_FATTURA_LESS1, a.NUMROW_PAGAMENTO, a.PAGAMENTO_LESS1 NUMROW_PAGAMENTO_LESS1,
+		b.VAL_FATTURA, b.RUNNINGSUM_FATTURA, c.VAL_PAGAMENTO, c.RUNNINGSUM_PAGAMENTO, ifnull(d.RUNNINGSUM_FATTURA, 0) RUNNINGSUM_FATTURA_LESS1,
+		b.VAL_FATTURA_LC, b.RUNNINGSUM_FATTURA_LC, c.VAL_PAGAMENTO_LC, c.RUNNINGSUM_PAGAMENTO_LC, ifnull(d.RUNNINGSUM_FATTURA_LC, 0) RUNNINGSUM_FATTURA_LC_LESS1
+		--into :TMP_Passo2_P4
+		from :TMP_Passo2_P3 a
+		join :TMP_Passo2_Fatture b
+		on (a.BUKRS=b.BUKRS and a.AUGBL=b.AUGBL and a.AUGDT=b.AUGDT and a.KUNNR=b.KUNNR and a.NUMROW_FATTURA=b."ROWID")
+		join :TMP_Passo2_Pagamenti c
+		on (a.BUKRS=c.BUKRS and a.AUGBL=c.AUGBL and a.AUGDT=c.AUGDT and a.KUNNR=c.KUNNR and a.NUMROW_PAGAMENTO=c."ROWID")
+		left join :TMP_Passo2_Fatture d
+		on (a.BUKRS=d.BUKRS and a.AUGBL=d.AUGBL and a.AUGDT=d.AUGDT and a.KUNNR=d.KUNNR and a.FATTURA_LESS1=d."ROWID")
+	;
+	
+	--Generiamo il max rowid per ogni fattura
+	Temp_Fatture =
+		select a.BUKRS, a.GJAHR, a.BELNR, a.BUZEI, 
+		ifnull(max(case when a.VAL_PAGATO_ALLOCATO_GMP_LC is null then null else a."ROWID" end), 0) MAX_ROWID
+		--into :Temp_Fatture
+		From :WT_CLI_PASSO1 a
+		join :TMP_Passo2_Fatture b
+		on (a.BUKRS=b.BUKRS and a.GJAHR=b.GJAHR and a.BELNR=b.BELNR and a.BUZEI=b.BUZEI)
+		group by a.BUKRS, a.GJAHR, a.BELNR, a.BUZEI
+	;
+	
+	--Generiamo il valore della tabella
+
+	--Allocazione dei pagamenti sulle fatture
+	TMP_Passo2_P5 = 
+		select 
+		BUKRS, GJAHR, BELNR, BUZEI, "ROWID",
+		KUNNR,
+		BSCHL,
+		BLDAT, 
+		NETDT,
+		case when "ROWID"=1 then VAL_FATTURA else null end DMSHB,
+		case when "ROWID"=1 then VAL_FATTURA_LC else null end WRSHB,
+		null VAL_PAGATO_ALLOCATO,
+		VAL_PAGATO_ALLOCATO_GMP,
+		null VAL_PAGATO_ALLOCATO_LC,
+		VAL_PAGATO_ALLOCATO_GMP_LC,
+		DATA_PAREGGIO DATA_PAGAMENTO, 
+		ESERCIZIO_PAGAMENTO,
+		DOCUMENTO_PAGAMENTO,
+		NUM_RIGA_PAGAMENTO,
+		AUGBL, 
+		AUGDT,
+		DATA_PAREGGIO
+		--into :TMP_Passo2_P5
+		from
+		(
+			select 
+			b.BUKRS, b.GJAHR, b.BELNR, b.BUZEI, ROW_NUMBER() over (partition by NUMROW_FATTURA order by a.NUMROW_PAGAMENTO) +d.MAX_ROWID "ROWID", MAX_ROWID,
+			b.KUNNR,
+			b.BSCHL,
+			b.BLDAT, b.NETDT,
+			b.VAL_FATTURA,
+			b.VAL_FATTURA_LC,
+			--NUMROW_FATTURA, NUMROW_PAGAMENTO, 
+			case
+				when ifnull(a.NUMROW_FATTURA_LESS1, -1)=a.NUMROW_FATTURA and a.RUNNINGSUM_FATTURA<=abs(a.RUNNINGSUM_PAGAMENTO) then -1*(a.RUNNINGSUM_FATTURA-abs(a.RUNNINGSUM_PAGAMENTO)+abs(a.VAL_PAGAMENTO))
+				else
+					case
+						when ifnull(a.NUMROW_FATTURA_LESS1, -1)<>a.NUMROW_FATTURA and a.RUNNINGSUM_FATTURA<=abs(a.RUNNINGSUM_PAGAMENTO) then -1*a.VAL_FATTURA
+						else 
+							case
+								when a.NUMROW_PAGAMENTO=a.NUMROW_PAGAMENTO_LESS1 and a.RUNNINGSUM_FATTURA>=abs(a.RUNNINGSUM_PAGAMENTO) then -1*(abs(a.RUNNINGSUM_PAGAMENTO)-a.RUNNINGSUM_FATTURA_LESS1)
+								else a.VAL_PAGAMENTO
+							end
+					end
+			end VAL_PAGATO_ALLOCATO_GMP,
+			case
+				when ifnull(a.NUMROW_FATTURA_LESS1, -1)=a.NUMROW_FATTURA and a.RUNNINGSUM_FATTURA_LC<=abs(a.RUNNINGSUM_PAGAMENTO_LC) then -1*(a.RUNNINGSUM_FATTURA_LC-abs(a.RUNNINGSUM_PAGAMENTO_LC)+abs(a.VAL_PAGAMENTO_LC))
+				else
+					case
+						when ifnull(a.NUMROW_FATTURA_LESS1, -1)<>a.NUMROW_FATTURA and a.RUNNINGSUM_FATTURA_LC<=abs(a.RUNNINGSUM_PAGAMENTO_LC) then -1*a.VAL_FATTURA_LC
+						else 
+							case
+								when a.NUMROW_PAGAMENTO=a.NUMROW_PAGAMENTO_LESS1 and a.RUNNINGSUM_FATTURA_LC>=abs(a.RUNNINGSUM_PAGAMENTO_LC) then -1*(abs(a.RUNNINGSUM_PAGAMENTO_LC)-a.RUNNINGSUM_FATTURA_LC_LESS1)
+								else a.VAL_PAGAMENTO
+							end
+					end
+			end VAL_PAGATO_ALLOCATO_GMP_LC,
+			c.GJAHR ESERCIZIO_PAGAMENTO,
+			c.BELNR DOCUMENTO_PAGAMENTO,
+			c.BUZEI NUM_RIGA_PAGAMENTO,
+			c.AUGBL, 
+			c.AUGDT,
+			c.BLDAT DATA_PAREGGIO
+			from :TMP_Passo2_P4 a
+			join :TMP_Passo2_Fatture b
+			on (a.BUKRS=b.BUKRS and a.AUGBL=b.AUGBL and a.AUGDT=b.AUGDT and a.KUNNR=b.KUNNR and a.NUMROW_FATTURA=b."ROWID")
+			join :TMP_Passo2_Pagamenti c
+			on (a.BUKRS=c.BUKRS and a.AUGBL=c.AUGBL and a.AUGDT=c.AUGDT and a.KUNNR=c.KUNNR and a.NUMROW_PAGAMENTO=c."ROWID")
+			join :Temp_Fatture d
+			on (b.BUKRS=d.BUKRS and b.GJAHR=d.GJAHR and b.BELNR=d.BELNR and b.BUZEI=d.BUZEI)
+			--order by 1,2,3,4,5	
+		) a 
+		union all
+		--Partite già elaborate
+		select 
+		BUKRS, GJAHR, BELNR, BUZEI, "ROWID",
+		KUNNR,
+		a.BSCHL,
+		BLDAT, 
+		NETDT,
+		DMSHB,
+		WRSHB,
+		case when b.TIPO='avere' and  b.DESTINAZIONE='Cliente' and b.TIPO_CHIAVE='Fatture' then VAL_PAGATO_ALLOCATO else null end VAL_PAGATO_ALLOCATO,
+		VAL_PAGATO_ALLOCATO_GMP,
+		case when b.TIPO='avere' and  b.DESTINAZIONE='Cliente' and b.TIPO_CHIAVE='Fatture' then VAL_PAGATO_ALLOCATO_LC else null end VAL_PAGATO_ALLOCATO_LC,
+		VAL_PAGATO_ALLOCATO_GMP_LC,
+		DATA_PAGAMENTO, 
+		ESERCIZIO_PAGAMENTO,
+		DOCUMENTO_PAGAMENTO,
+		NUM_RIGA_PAGAMENTO,
+		AUGBL, 
+		AUGDT,
+		null DATA_PAREGGIO
+		from :TMP_Partite_Elaborate a
+		join :M_CHIAVE_CONTABILE b
+		on (a.BSCHL=b.BSCHL)
+		union all
+		--Pagamento coinvolti in questo ciclo
+		select 
+		BUKRS, GJAHR, BELNR, BUZEI, 1 "ROWID",
+		KUNNR,
+		BSCHL,
+		BLDAT, 
+		null NETDT,
+		VAL_PAGAMENTO DMSHB,
+		VAL_PAGAMENTO_LC WRSHB,
+		-1*VAL_PAGAMENTO VAL_PAGATO_ALLOCATO,
+		null VAL_PAGATO_ALLOCATO_GMP,
+		-1*VAL_PAGAMENTO_LC VAL_PAGATO_ALLOCATO_LC,
+		null VAL_PAGATO_ALLOCATO_GMP_LC,
+		null DATA_PAGAMENTO, 
+		null ESERCIZIO_PAGAMENTO,
+		null DOCUMENTO_PAGAMENTO,
+		null NUM_RIGA_PAGAMENTO,
+		AUGBL, 
+		AUGDT,
+		null DATA_PAREGGIO 
+		from :TMP_Passo2_Pagamenti
+	;
+	
+	var_out = 
+		select 
+		a.BUKRS, a.GJAHR, a.BELNR, a.BUZEI, a."ROWID", 
+		a.KUNNR,
+		a.BSCHL,
+		case
+			when a.WRSHB=abs(b.VAL_PAGATO_ALLOCATO_LC) then 1 --Fatture totalmente elise dai documenti di pareggio
+			when "ROWID">1 then 1 --Righe fatture fittizie generate con il passo2
+			else 0
+		end STATUS, 
+		a.BLDAT, a.NETDT,
+		a.DMSHB,
+		a.WRSHB,
+		case when a."ROWID"=1 and b.TIPO_CHIAVE='Fatture' then b.VAL_PAGATO_ALLOCATO else a.VAL_PAGATO_ALLOCATO end VAL_PAGATO_ALLOCATO,
+		a.VAL_PAGATO_ALLOCATO_GMP, 
+		case when a."ROWID"=1 and b.TIPO_CHIAVE='Fatture' then b.VAL_PAGATO_ALLOCATO_LC else  a.VAL_PAGATO_ALLOCATO_LC end VAL_PAGATO_ALLOCATO_LC,
+		a.VAL_PAGATO_ALLOCATO_GMP_LC, 
+		a.DATA_PAGAMENTO, 
+		a.ESERCIZIO_PAGAMENTO,
+		a.DOCUMENTO_PAGAMENTO,
+		a.NUM_RIGA_PAGAMENTO,
+		a.AUGBL,
+		a.AUGDT,
+		b.DATA_PAREGGIO
+		--into :WT_CLI_PASSO2
+		from :TMP_Passo2_P5 a
+		left join
+		(
+			select a.BUKRS, a.GJAHR, a.BELNR, a.BUZEI, a.BSCHL, b.TIPO_CHIAVE,
+			sum(VAL_PAGATO_ALLOCATO_GMP) VAL_PAGATO_ALLOCATO, 
+			sum(VAL_PAGATO_ALLOCATO_GMP_LC) VAL_PAGATO_ALLOCATO_LC, 
+			max(DATA_PAREGGIO) DATA_PAREGGIO
+			From :TMP_Passo2_P5 a
+			join :M_CHIAVE_CONTABILE b
+			on (a.BSCHL=b.BSCHL)
+			where b.TIPO_CHIAVE='Fatture' and b.TIPO='dare' and b.DESTINAZIONE='Cliente'
+			and a.AUGBL='0006004370'
+			and a.AUGDT='2015-05-27'
+			and a.BUKRS='1000'
+			and a.KUNNR='0002029134'
+			group by a.BUKRS, a.GJAHR, a.BELNR, a.BUZEI, a.BSCHL, a.BSCHL, b.TIPO_CHIAVE
+		) b
+		on (a.BUKRS=b.BUKRS and a.GJAHR=b.GJAHR and a.BELNR=b.BELNR and a.BUZEI=b.BUZEI and a.BSCHL=b.BSCHL)
+		union all
+		--Fatture non ancora elaborate, perchè non hanno pagamenti associati
+		select a.BUKRS, a.GJAHR, a.BELNR, a.BUZEI, 1 "ROWID", 
+		a.KUNNR,
+		a.BSCHL,
+		0 STATUS,
+		a.BLDAT,
+		a.NETDT,
+		a.DMSHB,
+		a.WRSHB,
+		a.VAL_PAGATO_ALLOCATO,
+		a.VAL_PAGATO_ALLOCATO_GMP, 
+		a.VAL_PAGATO_ALLOCATO_LC,
+		a.VAL_PAGATO_ALLOCATO_GMP_LC, 
+		a.DATA_PAGAMENTO, 
+		null ESERCIZIO_PAGAMENTO,
+		null DOCUMENTO_PAGAMENTO,
+		null NUM_RIGA_PAGAMENTO,
+		a.AUGBL, --Vengono considerate anche le partite pareggiate ma che non si chiudono a causa di insoluti e resi in fattura
+		a.AUGDT, --Vengono considerate anche le partite pareggiate ma che non si chiudono a causa di insoluti e resi in fattura
+		null DATA_PAREGGIO
+		from :WT_CLI_PASSO1 a
+		join :M_CHIAVE_CONTABILE c
+		on (a.BSCHL=c.BSCHL)
+		left join :TMP_Passo2_P5 d
+		on (a.BUKRS=d.BUKRS and a.GJAHR=d.GJAHR and a.BELNR=d.BELNR and a.BUZEI=d.BUZEI)
+		where c.DESTINAZIONE='Cliente'
+		and c.TIPO_CHIAVE='Fatture'
+		and d.BUKRS is null
+	;
+
+--END /********* End Procedure Script ************/
+
+ 
+END;

@@ -39,7 +39,7 @@
  BEGIN 
  
  WT_CLI_RESI_PASSO1 = select * from &quot;CDA_TMP&quot;.&quot;HASSO_CREW.CDA.Porting.Functions::TB_CDA_CLI_RESI_PASSO1&quot; ();
- M_CHIAVE_CONTABILE = select * from &quot;HT&quot;.&quot;M_CHIAVE_CONTABILE&quot;;
+ M_CHIAVE_CONTABILE = select * from &quot;CDA_TMP&quot;.&quot;M_CHIAVE_CONTABILE&quot;;
  
 	--PASSO2: Gestione delle righe di Pareggio
 
@@ -47,7 +47,7 @@
 	--Pagamenti
 	TMP_Passo2_Resi = 
 		select 
-		ROW_NUMBER() over (order by a.AUGBL, a.AUGDT, a.KUNNR, a.BUKRS, a.GJAHR, a.BELNR, a.BUZEI) &quot;ROWID&quot;,
+		ROW_NUMBER() over (order by a.AUGBL, a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR, a.BLDAT, a.BELNR, a.BUZEI) &quot;ROWID&quot;,
 		a.BSCHL,
 		--Documenti di Pareggio
 		AUGBL, AUGDT, KUNNR, 
@@ -108,7 +108,7 @@
 		on (a.AUGBL=b.AUGBL and a.AUGDT=b.AUGDT and a.BUKRS=b.BUKRS and a.KUNNR=b.KUNNR)
 		where RUNNINGSUM_FATTURA&lt;=abs(RUNNINGSUM_PAGAMENTO)
 		group by a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR, a.&quot;ROWID&quot;
-		order by 1 
+		--order by 1 
 	;
 
 	--Passo2: Per tutte le fatture non presenti all'interno dela passo1, seleziono la prima e la associo automaticamente al pagamento maggiore possibile
@@ -142,33 +142,33 @@
 
 	----Gestisco gli intervalli di pagamento
 	TMP_Passo2_P2 =
-	select ROW_NUMBER() over (order by a.NUMROW_FATTURA, NUMROW_PAGAMENTO) &quot;ROWID&quot;, a.*
-	--into #TMP_Passo2_P2
-	from
-	(
-		select a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR, a.NUMROW_FATTURA, ifnull(b.&quot;ROWID&quot;, c.MINROWID) NUMROW_PAGAMENTO
-		from :TMP_Passo2_P1 a
-		inner join 
+		select ROW_NUMBER() over (order by a.NUMROW_FATTURA, NUMROW_PAGAMENTO) &quot;ROWID&quot;, a.*
+		--into #TMP_Passo2_P2
+		from
 		(
-			--Per ogni documento di pareggio devo gestire il minimo documento contabile di pagamento (lowerbound)
-			select BUKRS, AUGBL, AUGDT, KUNNR, min (&quot;ROWID&quot;) MINROWID
-			from :TMP_Passo2_Resi
-			group by BUKRS, AUGBL, AUGDT, KUNNR
-		) c
-		on (a.BUKRS=c.BUKRS and a.AUGBL=c.AUGBL and a.AUGDT=c.AUGDT and a.KUNNR=c.KUNNR)
-		left join :TMP_Passo2_Resi b
-		on (a.BUKRS=b.BUKRS and a.AUGBL=b.AUGBL and a.AUGDT=b.AUGDT and a.KUNNR=b.KUNNR and b.&quot;ROWID&quot; between ifnull(a.PAGAMENTO_LESS1 , c.MINROWID) and a.NUMROW_PAGAMENTO)
-	) a
+			select a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR, a.NUMROW_FATTURA, ifnull(b.&quot;ROWID&quot;, c.MINROWID) NUMROW_PAGAMENTO
+			from :TMP_Passo2_P1 a
+			inner join 
+			(
+				--Per ogni documento di pareggio devo gestire il minimo documento contabile di pagamento (lowerbound)
+				select BUKRS, AUGBL, AUGDT, KUNNR, min (&quot;ROWID&quot;) MINROWID
+				from :TMP_Passo2_Resi
+				group by BUKRS, AUGBL, AUGDT, KUNNR
+			) c
+			on (a.BUKRS=c.BUKRS and a.AUGBL=c.AUGBL and a.AUGDT=c.AUGDT and a.KUNNR=c.KUNNR)
+			left join :TMP_Passo2_Resi b
+			on (a.BUKRS=b.BUKRS and a.AUGBL=b.AUGBL and a.AUGDT=b.AUGDT and a.KUNNR=b.KUNNR and b.&quot;ROWID&quot; between ifnull(a.PAGAMENTO_LESS1 , c.MINROWID) and a.NUMROW_PAGAMENTO)
+		) a
 	;
 
 	----Seleziono per ogni rigafattura, il runningsum del valore precedente
 	TMP_Passo2_P3 =
-	select a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR, a.NUMROW_FATTURA, a.NUMROW_PAGAMENTO, max(b.NUMROW_FATTURA) FATTURA_LESS1, max(b.NUMROW_PAGAMENTO) PAGAMENTO_LESS1
-	--into #TMP_Passo2_P3
-	From :TMP_Passo2_P2 a
-	left join :TMP_Passo2_P2 b
-	on (a.BUKRS=b.BUKRS and a.AUGBL=b.AUGBL and a.AUGDT=b.AUGDT and a.KUNNR=b.KUNNR AND a.&quot;ROWID&quot;>b.&quot;ROWID&quot;)
-	group by a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR, a.NUMROW_FATTURA, a.NUMROW_PAGAMENTO
+		select a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR, a.NUMROW_FATTURA, a.NUMROW_PAGAMENTO, max(b.NUMROW_FATTURA) FATTURA_LESS1, max(b.NUMROW_PAGAMENTO) PAGAMENTO_LESS1
+		--into #TMP_Passo2_P3
+		From :TMP_Passo2_P2 a
+		left join :TMP_Passo2_P2 b
+		on (a.BUKRS=b.BUKRS and a.AUGBL=b.AUGBL and a.AUGDT=b.AUGDT and a.KUNNR=b.KUNNR AND a.&quot;ROWID&quot;>b.&quot;ROWID&quot;)
+		group by a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR, a.NUMROW_FATTURA, a.NUMROW_PAGAMENTO
 	;
 	
 	TMP_Passo2_P4 =
@@ -339,70 +339,70 @@
 
 
 	var_out = 
-	(select 
-	a.BUKRS, a.GJAHR, a.BELNR, a.BUZEI, a.&quot;ROWID&quot;, 
-	a.KUNNR,
-	a.BSCHL,
-	case
-		when a.DMSHB=abs(VAL_PAGATO_ALLOCATO) then 1 --Fatture totalmente elise dai documenti di pareggio
-		when &quot;ROWID&quot;>1 then 1 --Righe fatture fittizie generate con il passo2
-		else 0
-	end STATUS, 
-	a.BLDAT, a.NETDT,
-	case when a.&quot;ROWID&quot;=1 then a.DMSHB else 0 end DMSHB,
-	case when a.&quot;ROWID&quot;=1 then a.WRSHB else 0 end WRSHB,
-	case when a.&quot;ROWID&quot;=1 then b.VAL_PAGATO_ALLOCATO else null end VAL_PAGATO_ALLOCATO,
-	a.VAL_PAGATO_ALLOCATO_GMP, 
-	case when a.&quot;ROWID&quot;=1 then b.VAL_PAGATO_ALLOCATO_LC else null end VAL_PAGATO_ALLOCATO_LC,
-	a.VAL_PAGATO_ALLOCATO_GMP_LC, 
-	a.DATA_PAGAMENTO, 
-	a.ESERCIZIO_PAGAMENTO,
-	a.DOCUMENTO_PAGAMENTO,
-	a.NUM_RIGA_PAGAMENTO,
-	a.AUGBL,
-	a.AUGDT,
-	b.DATA_PAREGGIO
-	--into #WT_CLI_PASSO2
-	from :TMP_Passo2_P5 a
-	left join
-	(
-		select BUKRS, GJAHR, BELNR, BUZEI, a.BSCHL, b.TIPO_CHIAVE,
-		case 
-			when b.TIPO_CHIAVE='Fatture' and b.TIPO = 'dare' then sum(VAL_PAGATO_ALLOCATO_GMP) 
-			else -1*sum(a.DMSHB)
-		end VAL_PAGATO_ALLOCATO, 
-		case 
-			when b.TIPO_CHIAVE='Fatture' and b.TIPO = 'dare' then sum(VAL_PAGATO_ALLOCATO_GMP_LC) 
-			else -1*sum(a.WRSHB)
-		end VAL_PAGATO_ALLOCATO_LC, 
-		max(DATA_PAREGGIO) DATA_PAREGGIO
-		From :TMP_Passo2_P5 a
-		join :M_CHIAVE_CONTABILE b
-		on (a.BSCHL=b.BSCHL)
-		group by BUKRS, GJAHR, BELNR, BUZEI, a.BSCHL, b.TIPO_CHIAVE, b.TIPO
-	) b
-	on (a.BUKRS=b.BUKRS and a.GJAHR=b.GJAHR and a.BELNR=b.BELNR and a.BUZEI=b.BUZEI and a.BSCHL=b.BSCHL)
-	union
-	--Fatture non ancora elaborate, perchè non hanno pagamenti associati
-		select a.BUKRS, a.GJAHR, a.BELNR, a.BUZEI, 1 &quot;ROWID&quot;, 
+		(select 
+		a.BUKRS, a.GJAHR, a.BELNR, a.BUZEI, a.&quot;ROWID&quot;, 
 		a.KUNNR,
 		a.BSCHL,
-		0 STATUS,
-		a.BLDAT,
-		a.NETDT,
-		a.DMSHB,
-		a.WRSHB,
-		a.VAL_PAGATO_ALLOCATO,
+		case
+			when a.DMSHB=abs(VAL_PAGATO_ALLOCATO) then 1 --Fatture totalmente elise dai documenti di pareggio
+			when &quot;ROWID&quot;>1 then 1 --Righe fatture fittizie generate con il passo2
+			else 0
+		end STATUS, 
+		a.BLDAT, a.NETDT,
+		case when a.&quot;ROWID&quot;=1 then a.DMSHB else 0 end DMSHB,
+		case when a.&quot;ROWID&quot;=1 then a.WRSHB else 0 end WRSHB,
+		case when a.&quot;ROWID&quot;=1 then b.VAL_PAGATO_ALLOCATO else null end VAL_PAGATO_ALLOCATO,
 		a.VAL_PAGATO_ALLOCATO_GMP, 
-		a.VAL_PAGATO_ALLOCATO_LC,
+		case when a.&quot;ROWID&quot;=1 then b.VAL_PAGATO_ALLOCATO_LC else null end VAL_PAGATO_ALLOCATO_LC,
 		a.VAL_PAGATO_ALLOCATO_GMP_LC, 
 		a.DATA_PAGAMENTO, 
-		null ESERCIZIO_PAGAMENTO,
-		null DOCUMENTO_PAGAMENTO,
-		null NUM_RIGA_PAGAMENTO,
-		a.AUGBL, --Vengono considerate anche le partite pareggiate ma che non si chiudono a causa di insoluti e resi in fattura
-		a.AUGDT, --Vengono considerate anche le partite pareggiate ma che non si chiudono a causa di insoluti e resi in fattura
-		null DATA_PAREGGIO
+		a.ESERCIZIO_PAGAMENTO,
+		a.DOCUMENTO_PAGAMENTO,
+		a.NUM_RIGA_PAGAMENTO,
+		a.AUGBL,
+		a.AUGDT,
+		b.DATA_PAREGGIO
+		--into #WT_CLI_PASSO2
+		from :TMP_Passo2_P5 a
+		left join
+		(
+			select BUKRS, GJAHR, BELNR, BUZEI, a.BSCHL, b.TIPO_CHIAVE,
+			case 
+				when b.TIPO_CHIAVE='Fatture' and b.TIPO = 'dare' then sum(VAL_PAGATO_ALLOCATO_GMP) 
+				else -1*sum(a.DMSHB)
+			end VAL_PAGATO_ALLOCATO, 
+			case 
+				when b.TIPO_CHIAVE='Fatture' and b.TIPO = 'dare' then sum(VAL_PAGATO_ALLOCATO_GMP_LC) 
+				else -1*sum(a.WRSHB)
+			end VAL_PAGATO_ALLOCATO_LC, 
+			max(DATA_PAREGGIO) DATA_PAREGGIO
+			from :TMP_Passo2_P5 a
+			join :M_CHIAVE_CONTABILE b
+			on (a.BSCHL=b.BSCHL)
+			group by BUKRS, GJAHR, BELNR, BUZEI, a.BSCHL, b.TIPO_CHIAVE, b.TIPO
+		) b
+		on (a.BUKRS=b.BUKRS and a.GJAHR=b.GJAHR and a.BELNR=b.BELNR and a.BUZEI=b.BUZEI and a.BSCHL=b.BSCHL)
+			union
+		--Fatture non ancora elaborate, perchè non hanno pagamenti associati
+		select a.BUKRS, a.GJAHR, a.BELNR, a.BUZEI, 1 &quot;ROWID&quot;, 
+			a.KUNNR,
+			a.BSCHL,
+			0 STATUS,
+			a.BLDAT,
+			a.NETDT,
+			a.DMSHB,
+			a.WRSHB,
+			a.VAL_PAGATO_ALLOCATO,
+			a.VAL_PAGATO_ALLOCATO_GMP, 
+			a.VAL_PAGATO_ALLOCATO_LC,
+			a.VAL_PAGATO_ALLOCATO_GMP_LC, 
+			a.DATA_PAGAMENTO, 
+			null ESERCIZIO_PAGAMENTO,
+			null DOCUMENTO_PAGAMENTO,
+			null NUM_RIGA_PAGAMENTO,
+			a.AUGBL, --Vengono considerate anche le partite pareggiate ma che non si chiudono a causa di insoluti e resi in fattura
+			a.AUGDT, --Vengono considerate anche le partite pareggiate ma che non si chiudono a causa di insoluti e resi in fattura
+			null DATA_PAREGGIO
 		from :WT_CLI_RESI_PASSO1 a
 		join :M_CHIAVE_CONTABILE c
 		on (a.BSCHL=c.BSCHL)
@@ -426,9 +426,21 @@ END /********* End Procedure Script ************/</definition>
         <descriptions/>
         <keyMapping columnObjectName="Script_View" columnName="BUKRS"/>
       </attribute>
+      <attribute id="GJAHR" order="2">
+        <descriptions/>
+        <keyMapping columnObjectName="Script_View" columnName="GJAHR"/>
+      </attribute>
       <attribute id="BELNR" order="3">
         <descriptions/>
         <keyMapping columnObjectName="Script_View" columnName="BELNR"/>
+      </attribute>
+      <attribute id="BUZEI" order="4">
+        <descriptions/>
+        <keyMapping columnObjectName="Script_View" columnName="BUZEI"/>
+      </attribute>
+      <attribute id="ROWID" order="5">
+        <descriptions/>
+        <keyMapping columnObjectName="Script_View" columnName="ROWID"/>
       </attribute>
       <attribute id="KUNNR" order="6">
         <descriptions/>
@@ -438,13 +450,45 @@ END /********* End Procedure Script ************/</definition>
         <descriptions/>
         <keyMapping columnObjectName="Script_View" columnName="BSCHL"/>
       </attribute>
+      <attribute id="STATUS" order="8">
+        <descriptions/>
+        <keyMapping columnObjectName="Script_View" columnName="STATUS"/>
+      </attribute>
+      <attribute id="BLDAT" order="9">
+        <descriptions/>
+        <keyMapping columnObjectName="Script_View" columnName="BLDAT"/>
+      </attribute>
+      <attribute id="NETDT" order="10">
+        <descriptions/>
+        <keyMapping columnObjectName="Script_View" columnName="NETDT"/>
+      </attribute>
+      <attribute id="DATA_PAGAMENTO" order="17">
+        <descriptions/>
+        <keyMapping columnObjectName="Script_View" columnName="DATA_PAGAMENTO"/>
+      </attribute>
+      <attribute id="ESERCIZIO_PAGAMENTO" order="18">
+        <descriptions/>
+        <keyMapping columnObjectName="Script_View" columnName="ESERCIZIO_PAGAMENTO"/>
+      </attribute>
       <attribute id="DOCUMENTO_PAGAMENTO" order="19">
         <descriptions/>
         <keyMapping columnObjectName="Script_View" columnName="DOCUMENTO_PAGAMENTO"/>
       </attribute>
+      <attribute id="NUM_RIGA_PAGAMENTO" order="20">
+        <descriptions/>
+        <keyMapping columnObjectName="Script_View" columnName="NUM_RIGA_PAGAMENTO"/>
+      </attribute>
       <attribute id="AUGBL" order="21">
         <descriptions/>
         <keyMapping columnObjectName="Script_View" columnName="AUGBL"/>
+      </attribute>
+      <attribute id="AUGDT" order="22">
+        <descriptions/>
+        <keyMapping columnObjectName="Script_View" columnName="AUGDT"/>
+      </attribute>
+      <attribute id="DATA_PAREGGIO" order="23">
+        <descriptions/>
+        <keyMapping columnObjectName="Script_View" columnName="DATA_PAREGGIO"/>
       </attribute>
     </attributes>
     <calculatedAttributes/>
@@ -456,30 +500,6 @@ END /********* End Procedure Script ************/</definition>
       </layout>
     </privateDataFoundation>
     <baseMeasures>
-      <measure id="GJAHR" order="2" aggregationType="sum" measureType="simple">
-        <descriptions/>
-        <measureMapping columnObjectName="Script_View" columnName="GJAHR"/>
-      </measure>
-      <measure id="BUZEI" order="4" aggregationType="sum" measureType="simple">
-        <descriptions/>
-        <measureMapping columnObjectName="Script_View" columnName="BUZEI"/>
-      </measure>
-      <measure id="ROWID" order="5" aggregationType="sum" measureType="simple">
-        <descriptions/>
-        <measureMapping columnObjectName="Script_View" columnName="ROWID"/>
-      </measure>
-      <measure id="STATUS" order="8" aggregationType="sum" measureType="simple">
-        <descriptions/>
-        <measureMapping columnObjectName="Script_View" columnName="STATUS"/>
-      </measure>
-      <measure id="BLDAT" order="9" aggregationType="min" measureType="simple">
-        <descriptions/>
-        <measureMapping columnObjectName="Script_View" columnName="BLDAT"/>
-      </measure>
-      <measure id="NETDT" order="10" aggregationType="min" measureType="simple">
-        <descriptions/>
-        <measureMapping columnObjectName="Script_View" columnName="NETDT"/>
-      </measure>
       <measure id="DMSHB" order="11" aggregationType="sum" measureType="simple">
         <descriptions/>
         <measureMapping columnObjectName="Script_View" columnName="DMSHB"/>
@@ -503,26 +523,6 @@ END /********* End Procedure Script ************/</definition>
       <measure id="VAL_PAGATO_ALLOCATO_GMP_LC" order="16" aggregationType="sum" measureType="simple">
         <descriptions/>
         <measureMapping columnObjectName="Script_View" columnName="VAL_PAGATO_ALLOCATO_GMP_LC"/>
-      </measure>
-      <measure id="DATA_PAGAMENTO" order="17" aggregationType="min" measureType="simple">
-        <descriptions/>
-        <measureMapping columnObjectName="Script_View" columnName="DATA_PAGAMENTO"/>
-      </measure>
-      <measure id="ESERCIZIO_PAGAMENTO" order="18" aggregationType="sum" measureType="simple">
-        <descriptions/>
-        <measureMapping columnObjectName="Script_View" columnName="ESERCIZIO_PAGAMENTO"/>
-      </measure>
-      <measure id="NUM_RIGA_PAGAMENTO" order="20" aggregationType="sum" measureType="simple">
-        <descriptions/>
-        <measureMapping columnObjectName="Script_View" columnName="NUM_RIGA_PAGAMENTO"/>
-      </measure>
-      <measure id="AUGDT" order="22" aggregationType="min" measureType="simple">
-        <descriptions/>
-        <measureMapping columnObjectName="Script_View" columnName="AUGDT"/>
-      </measure>
-      <measure id="DATA_PAREGGIO" order="23" aggregationType="min" measureType="simple">
-        <descriptions/>
-        <measureMapping columnObjectName="Script_View" columnName="DATA_PAREGGIO"/>
       </measure>
     </baseMeasures>
     <calculatedMeasures/>

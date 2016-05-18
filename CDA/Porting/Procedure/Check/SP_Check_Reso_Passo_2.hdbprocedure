@@ -9,8 +9,12 @@ BEGIN
  *****************************/
  
  
- WT_CLI_RESI_PASSO1 = select * from "CDA_TMP"."HASSO_CREW.CDA.Porting.Functions::TB_CDA_CLI_RESI_PASSO1" ();
- M_CHIAVE_CONTABILE = select * from "HT"."M_CHIAVE_CONTABILE";
+ WT_CLI_RESI_PASSO1 = select * from "CDA_TMP"."HASSO_CREW.CDA.Porting.Functions::TB_CDA_CLI_RESI_PASSO1" ()
+ 						-- where BELNR = '0099000063' 
+ 						where AUGBL = '0080002953'
+						--and status=1
+						;
+ M_CHIAVE_CONTABILE = select * from "CDA_TMP"."M_CHIAVE_CONTABILE";
  
 	--PASSO2: Gestione delle righe di Pareggio
 
@@ -18,7 +22,7 @@ BEGIN
 	--Pagamenti
 	TMP_Passo2_Resi = 
 		select 
-		ROW_NUMBER() over (order by AUGBL, AUGDT, KUNNR, BUKRS, GJAHR, BELNR, BUZEI) "ROWID",
+		ROW_NUMBER() over (order by a.AUGBL, a.AUGDT, a.KUNNR, a.BUKRS, a.GJAHR, a.BELNR, a.BUZEI) "ROWID",
 		a.BSCHL,
 		--Documenti di Pareggio
 		AUGBL, AUGDT, KUNNR, 
@@ -79,7 +83,7 @@ BEGIN
 		on (a.AUGBL=b.AUGBL and a.AUGDT=b.AUGDT and a.BUKRS=b.BUKRS and a.KUNNR=b.KUNNR)
 		where RUNNINGSUM_FATTURA<=abs(RUNNINGSUM_PAGAMENTO)
 		group by a.BUKRS, a.AUGBL, a.AUGDT, a.KUNNR, a."ROWID"
-		order by 1 
+		--order by 1 
 	;
 
 	--Passo2: Per tutte le fatture non presenti all'interno dela passo1, seleziono la prima e la associo automaticamente al pagamento maggiore possibile
