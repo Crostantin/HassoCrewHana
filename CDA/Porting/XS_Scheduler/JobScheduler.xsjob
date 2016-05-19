@@ -1,6 +1,6 @@
 {
   "description": "Job to Update MY_TABLE values",
-  "action": "HASSO_CREW.CDA.Porting.XS_Job_Learning:XS_Source_File.xsjs::My_table",
+  "action": "HASSO_CREW.CDA.Porting.XS_Scheduler:SourceFile.xsjs::My_table",
   "schedules":
   [
   {
