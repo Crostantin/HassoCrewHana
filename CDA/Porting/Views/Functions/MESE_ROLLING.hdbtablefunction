@@ -1,0 +1,33 @@
+FUNCTION "CDA_TMP"."HASSO_CREW.CDA.Porting.Views.Functions::MESE_ROLLING" ( ) 
+	RETURNS TABLE (
+		"MONTH_ID" VARCHAR(6),
+		"MONTH_LOWERBOUND" VARCHAR(6),
+		"DATA_APERTURA" DATE,
+		"DATA_CHIUSURA" DATE		
+	)
+	
+	LANGUAGE SQLSCRIPT
+	SQL SECURITY INVOKER AS
+BEGIN
+/***************************** 
+	Write your function logic
+ *****************************/
+ 
+return (
+ 
+ 	select 
+ 		CALMONTH		as "MONTH_ID",
+ 		CALMONTH-100	as "MONTH_LOWERBOUND",
+ 		MIN(DATE_SQL)	as "DATA_APERTURA",
+ 	 	MAX(DATE_SQL)	as "DATA_CHIUSURA"
+ 	from
+ 		"CDA_TMP"."M_TIME_ANALYSIS_PERIOD" a, "_SYS_BI"."M_TIME_DIMENSION" b
+ 	where
+ 		b.CALMONTH > a.MONTH_FROM
+		and b.CALMONTH <= a.MONTH_TO
+ 	group by 
+ 		b.CALMONTH
+ 		 
+ );
+ 
+END;
